@@ -16,7 +16,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
     body { background-color: #0d1117; color: #e6edf3; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
 
-    /* شاشة الدخول */
     #authOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(13, 17, 23, 0.98); backdrop-filter: blur(15px);
@@ -72,7 +71,7 @@
     .msg-content {
       background: #0d1117; border: 1px solid #30363d; padding: 15px 20px;
       border-radius: 16px; line-height: 1.7; font-size: 0.98rem; word-break: break-word; flex: 1;
-      white-space: pre-wrap; /* للحفاظ على المسافات والأسطر كما كتبها المستخدم */
+      white-space: pre-wrap;
     }
     .message.user .msg-content { background: #1f6feb; border-color: #388bfd; color: #fff; border-bottom-left-radius: 2px; }
     .message.ai .msg-content { border-bottom-right-radius: 2px; }
@@ -91,8 +90,8 @@
     }
     .code-btn:hover { background: #8b949e; color: #0d1117; }
     
-    pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
-    pre code { font-family: 'Consolas', 'Monaco', monospace !important; font-size: 0.9rem; padding: 15px !important; display: block; }
+    pre { margin: 0; max-height: 450px; overflow-y: auto; }
+    pre code { font-family: 'Consolas', 'Monaco', monospace !important; font-size: 0.88rem; padding: 15px !important; display: block; }
 
     .download-zip-btn {
       display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; background: #238636;
@@ -104,7 +103,6 @@
     .input-wrapper { background: #161b22; border-top: 1px solid #30363d; padding: 20px 25px; }
     .chat-input-box { display: flex; gap: 12px; align-items: flex-end; }
     
-    /* تحويل حقل الإدخال إلى Textarea لدعم المسافات والأسطر المتعددة دون تهنيج */
     .chat-input-box textarea { 
       flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; 
       padding: 14px 20px; color: #fff; outline: none; font-size: 1rem; transition: 0.3s; 
@@ -132,7 +130,6 @@
 </head>
 <body>
 
-  <!-- شاشة الدخول الإجبارية للكود -->
   <div id="authOverlay">
     <div class="auth-box">
       <h2>Nova AI</h2>
@@ -148,7 +145,7 @@
         <div class="brand-logo">N</div>
         <div class="brand-title">
           <h3>Nova Ai</h3>
-          <span>مــتـصــل</span>
+          <span>مــتـصــل (دعم SQL, Lua, JSON, JS)</span>
         </div>
       </div>
       <div class="user-info">
@@ -160,18 +157,18 @@
     <div class="chat-container" id="chatContainer">
       <div class="message ai">
         <div class="avatar">AI</div>
-        <div class="msg-content" id="welcomeMsg">أهلاً بك 👋 يمكنك إرسال رسائل، رفع صور لتحليلها، أو إرفاق ملفات وبرمجة ما تريد!</div>
+        <div class="msg-content" id="welcomeMsg">أهلاً بك 👋 يمكنك الآن رفع ملفات SQL, Lua, JSON, JS وحل مشاكلك بدقة عالية. (إذا كان الكود باللغة الإنجليزية، سيتم الرد وشرحه بالإنجليزية).</div>
       </div>
     </div>
 
     <div class="input-wrapper">
-      <div id="filePreviewIndicator"> تم إرفاق ملف: <span id="fileNameDisplay"></span></div>
+      <div id="filePreviewIndicator">📁 تم إرفاق ملف: <span id="fileNameDisplay"></span></div>
       <div class="chat-input-box">
-        <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)" accept="image/*,.txt,.js,.py,.html,.css,.json">
-        <label for="fileInput" class="upload-btn-label" title="رفع صورة أو ملف">📎</label>
+        <!-- تم تعديل accept ليدعم ملفات sql, lua, json, js وغيرها -->
+        <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)" accept="image/*,.txt,.js,.lua,.sql,.json,.py,.html,.css">
+        <label for="fileInput" class="upload-btn-label" title="رفع ملف (SQL, Lua, JSON, JS) أو صورة">📎</label>
         
-        <!-- تم التعديل إلى Textarea لدعم الأسطر والمسافات بدون تهنيج -->
-        <textarea id="userInput" placeholder= "اكتب رسالتك" rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+        <textarea id="userInput" placeholder="اكتب رسالتك أو اطلب تحليل الكود..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
         
         <button class="send-btn" onclick="sendMessage()">ارسال</button>
       </div>
@@ -202,7 +199,10 @@
     const GROQ_API_KEY = k1 + k2;
 
     let conversationHistory = [
-      { role: "system", content: "أنت مساعد ذكي واسمه Nova AI. قم بالرد باللغة العربية. عند كتابة كود برمجياً، حدد اسم اللغة في بداية كل كتلة كود، واقترح اسماً ثابتاً ومعبراً للمشروع أو السكربت المطلوب." }
+      { 
+        role: "system", 
+        content: "You are Nova AI, an expert programming assistant supporting SQL, Lua, JSON, and JavaScript. CRITICAL LANGUAGE RULE: If the user's prompt, request, or attached code is primarily in English, you MUST reply entirely in English (explaining the problem, code, and providing solutions in English). If the user speaks Arabic, reply in Arabic. Never translate English code or English technical queries into Arabic unless explicitly requested." 
+      }
     ];
 
     let attachedFileContent = null;
@@ -245,15 +245,12 @@
         const diffMs = foundData.expireAt ? (foundData.expireAt - now) : (30 * 24 * 60 * 60 * 1000);
         const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
         const daysLeft = Math.floor(hoursLeft / 24);
-
         let timeLeftStr = daysLeft > 0 ? `${daysLeft} يوم` : `${hoursLeft} ساعة`;
 
         localStorage.setItem('nova_user_code', code);
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('activeCodeBadge').innerText = code;
         document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
-        document.getElementById('welcomeMsg').innerText = `أهلاً بك 👋 اشتراكك مفعل وساري المفعول لمدة (${timeLeftStr}). يمكنك إرفاق الملفات والصور وطرح طلباتك البرمجية بحرية.`;
-
       } catch (err) {
         console.error(err);
         showToast('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
@@ -272,11 +269,9 @@
       setTimeout(() => t.className = '', 3000);
     }
 
-    // إدارة رفع الملفات والصور
     window.handleFileSelect = function(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       attachedFileName = file.name;
       const reader = new FileReader();
 
@@ -303,7 +298,6 @@
       ind.style.display = 'block';
     }
 
-    // تكبير الـ Textarea تلقائياً بحسب المحتوى
     window.autoResize = function(textarea) {
       textarea.style.height = 'auto';
       textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
@@ -327,31 +321,28 @@
       if (attachedFileType === 'image') {
         displayHtml = `<img src="${attachedFileContent}" class="msg-image"><br>` + displayHtml;
         apiUserContent = [
-          { type: "text", text: text || "قم بتحليل هذه الصورة وقراءتها بالتفصيل." },
+          { type: "text", text: text || "Analyze this image and explain in detail." },
           { type: "image_url", image_url: { url: attachedFileContent } }
         ];
       } else if (attachedFileType === 'text') {
-        apiUserContent = `${text}\n\n[محتوى الملف المُرفق (${attachedFileName}):\n${attachedFileContent}]`;
-        displayHtml += `\n📁 [ملف مرفق: ${attachedFileName}]`;
+        apiUserContent = `${text}\n\n[Attached File (${attachedFileName}):\n${attachedFileContent}]`;
+        displayHtml += `\n📁 [Attached File: ${attachedFileName}]`;
       }
 
-      // إضافة رسالة المستخدم وثباتها بشكل دائم وعدم حذفها أبداً
       addMessageCustom(displayHtml, 'user');
       
       input.value = '';
       input.style.height = '52px';
-
       document.getElementById('fileInput').value = '';
       document.getElementById('filePreviewIndicator').style.display = 'none';
-      const currentFileContent = attachedFileContent;
+      
       const currentFileType = attachedFileType;
       attachedFileContent = null;
       attachedFileType = null;
       attachedFileName = "";
 
       conversationHistory.push({ role: "user", content: apiUserContent });
-      
-      const typingId = addMessagePlain('جاري المراجعة ..!', 'ai');
+      const typingId = addMessagePlain('Analyzing code and looking for issues...', 'ai');
 
       try {
         const selectedModel = (currentFileType === 'image') ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
@@ -365,13 +356,13 @@
           body: JSON.stringify({
             model: selectedModel,
             messages: conversationHistory,
-            temperature: 0.6
+            temperature: 0.3
           })
         });
 
         if (!response.ok) {
           removeMessage(typingId);
-          showToast(`خطأ في الاستجابة (${response.status})`);
+          showToast(`Response Error (${response.status})`);
           return;
         }
 
@@ -385,7 +376,7 @@
         }
       } catch (error) {
         removeMessage(typingId);
-        showToast('خطأ بالاتصال: ' + error.message);
+        showToast('Connection Error: ' + error.message);
       }
     }
 
@@ -395,11 +386,7 @@
       const msgId = 'msg-' + Date.now();
       msgDiv.id = msgId;
       msgDiv.className = `message ${sender}`;
-
-      msgDiv.innerHTML = `
-        <div class="avatar">AI</div>
-        <div class="msg-content">${escapeHtml(text)}</div>
-      `;
+      msgDiv.innerHTML = `<div class="avatar">AI</div><div class="msg-content">${escapeHtml(text)}</div>`;
       container.appendChild(msgDiv);
       container.scrollTop = container.scrollHeight;
       return msgId;
@@ -411,14 +398,8 @@
       const msgId = 'msg-' + Date.now();
       msgDiv.id = msgId;
       msgDiv.className = `message ${sender}`;
-
       const avatar = sender === 'user' ? 'أنت' : 'AI';
-      
-      msgDiv.innerHTML = `
-        <div class="avatar">${avatar}</div>
-        <div class="msg-content">${htmlContent}</div>
-      `;
-
+      msgDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="msg-content">${htmlContent}</div>`;
       container.appendChild(msgDiv);
       container.scrollTop = container.scrollHeight;
       return msgId;
@@ -443,16 +424,17 @@
           const codeId = `code-${msgId}-${blockCount}`;
           window[codeId] = code.trim();
 
+          let safeCode = escapeHtml(code.trim());
           return `
             <div class="code-block-wrapper">
               <div class="code-header">
-                <span>${validLang.toUpperCase()}</span>
+                <span>${validLang.toUpperCase()} (${code.trim().split('\n').length} lines)</span>
                 <div class="code-actions">
-                  <button class="code-btn" onclick="copyCode('${codeId}')">نسخ الكود</button>
-                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">تنزيل</button>
+                  <button class="code-btn" onclick="copyCode('${codeId}')">📋 Copy</button>
+                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">💾 Download</button>
                 </div>
               </div>
-              <pre><code class="language-${validLang}">${escapeHtml(code.trim())}</code></pre>
+              <pre><code class="language-${validLang}">${safeCode}</code></pre>
             </div>
           `;
         });
@@ -460,22 +442,20 @@
         processedText = escapeHtml(text);
       }
 
-      msgDiv.innerHTML = `
-        <div class="avatar">AI</div>
-        <div class="msg-content" id="content-${msgId}">${processedText}</div>
-      `;
-
+      msgDiv.innerHTML = `<div class="avatar">AI</div><div class="msg-content" id="content-${msgId}">${processedText}</div>`;
       container.appendChild(msgDiv);
 
-      msgDiv.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-      });
+      setTimeout(() => {
+        msgDiv.querySelectorAll('pre code').forEach((block) => {
+          try { hljs.highlightElement(block); } catch(e) {}
+        });
+      }, 50);
 
       if (hasCodeBlocks) {
         const contentDiv = document.getElementById(`content-${msgId}`);
         const zipBtn = document.createElement('button');
         zipBtn.className = 'download-zip-btn';
-        zipBtn.innerHTML = '📦 تحميل الملفات كـ ZIP (تسمية ذكية)';
+        zipBtn.innerHTML = '📦 Download Project as ZIP';
         zipBtn.onclick = () => downloadCodeAsZip(text);
         contentDiv.appendChild(zipBtn);
       }
@@ -491,7 +471,7 @@
       const codeText = window[codeId];
       if (codeText) {
         navigator.clipboard.writeText(codeText);
-        showToast('تم نسخ الكود بنجاح! 📋');
+        showToast('Code copied successfully! 📋');
       }
     };
 
@@ -501,6 +481,9 @@
 
       let ext = lang;
       if (lang === 'javascript' || lang === 'js') ext = 'js';
+      else if (lang === 'lua') ext = 'lua';
+      else if (lang === 'sql') ext = 'sql';
+      else if (lang === 'json') ext = 'json';
       else if (lang === 'python' || lang === 'py') ext = 'py';
       else if (lang === 'html') ext = 'html';
       else if (lang === 'css') ext = 'css';
@@ -515,14 +498,7 @@
       let match;
       let fileIndex = 1;
 
-      let projectBaseName = "nova_script";
-      const lastUserMsg = conversationHistory.filter(m => m.role === 'user').pop();
-      if (lastUserMsg && typeof lastUserMsg.content === 'string') {
-        let cleanName = lastUserMsg.content.replace(/[^\w\sà-ÿا-ي]/gi, '').trim().split(/\s+/).slice(0, 3).join('_');
-        if (cleanName.length > 2) {
-          projectBaseName = cleanName;
-        }
-      }
+      let projectBaseName = "nova_project";
 
       while ((match = codeBlockRegex.exec(rawText)) !== null) {
         let lang = (match[1] || 'txt').toLowerCase();
@@ -530,19 +506,20 @@
 
         let ext = lang;
         if (lang === 'javascript' || lang === 'js') ext = 'js';
+        else if (lang === 'lua') ext = 'lua';
+        else if (lang === 'sql') ext = 'sql';
+        else if (lang === 'json') ext = 'json';
         else if (lang === 'python' || lang === 'py') ext = 'py';
         else if (lang === 'html') ext = 'html';
         else if (lang === 'css') ext = 'css';
 
-        let filename = `${projectBaseName}_file_${fileIndex}.${ext}`;
-        if (ext === 'html' && fileIndex === 1) filename = `${projectBaseName}.html`;
-
+        let filename = `script_${fileIndex}.${ext}`;
         zip.file(filename, codeContent);
         fileIndex++;
       }
 
       zip.generateAsync({ type: "blob" }).then(function(content) {
-        saveAs(content, `${projectBaseName}_project.zip`);
+        saveAs(content, `${projectBaseName}.zip`);
       });
     }
   </script>
