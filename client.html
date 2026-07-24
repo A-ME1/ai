@@ -171,13 +171,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ضع مفتاح Groq الخاص بك هنا (تأكد من عدم رفع مفتاح جديد للعامة على GitHub لمنع حظره)
-    const GROQ_API_KEY = "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";
+    // ⚠️ استبدل النص الإنجليزي بالأسفل بمفتاحك الحقيقي من Groq Console
+    const GROQ_API_KEY = "gsk_ضع_مفتاحك_الانجليزي_هنا";
 
     let conversationHistory = [
       { 
         role: "system", 
-        content: "أنت مساعد ذكي وصديق برمجيات. تحدث مع المستخدم بعفوية وودية حول أي موضوع يسألك عنه. إذا طلب منك كود برمج أو سكريبت (مثل Lua, HTML, Python, JS...)، قم بكتابة الكود كاملاً داخل كتل الكود المخصصة ```language مع تحديد اسم اللغة دائماً فوق الكود."
+        content: "أنت مساعد ذكي وصديق برمجيات. تحدث مع المستخدم بعفوية وودية حول أي موضوع يسألك عنه. إذا طلب منك كود برمي أو سكريبت (مثل Lua, HTML, Python, JS...)، قم بكتابة الكود كاملاً داخل كتل الكود المخصصة ```language مع تحديد اسم اللغة دائماً فوق الكود."
       }
     ];
 
@@ -226,6 +226,9 @@
       const text = input.value.trim();
       if (!text) return;
 
+      // حماية وتنظيف مفتاح API من أي رموز غريبة قد تسبب أخطاء
+      const cleanApiKey = GROQ_API_KEY.replace(/[^\x00-\x7F]/g, "").trim();
+
       addMessage(text, 'user');
       input.value = '';
 
@@ -235,8 +238,9 @@
       try {
         const response = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
           method: "POST",
+          redirect: "follow",
           headers: {
-            "Authorization": `Bearer ${GROQ_API_KEY}`,
+            "Authorization": `Bearer ${cleanApiKey}`,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
@@ -246,10 +250,13 @@
           })
         });
 
-        // فحص الاستجابة للتأكد من عدم وجود خطأ 401 أو خطأ في السيرفر
         if (!response.ok) {
           removeMessage(typingId);
-          addMessage(`خطأ من السيرفر (${response.status}): يرجى التأكد من صلاحية مفتاح الـ Groq API.`, 'ai');
+          if (response.status === 401) {
+            addMessage('خطأ (401): مفتاح Groq غير صحيح أو حُذف. انسخ مفتاحاً جديداً من console.groq.com.', 'ai');
+          } else {
+            addMessage(`خطأ من السيرفر (${response.status}): تأكد من مفتاح الـ API والاتصال.`, 'ai');
+          }
           return;
         }
 
@@ -282,7 +289,6 @@
 
       const avatar = sender === 'user' ? 'أنت' : 'AI';
 
-      // معالجة كتل الأكواد وتعيين كلاس اللغات للتلوين
       let formattedText = text.replace(/```(\w+)?\n([\s\S]*?)```/g, function(match, lang, code) {
         const validLang = lang ? lang : 'plaintext';
         return `<pre><code class="language-${validLang}">${escapeHtml(code.trim())}</code></pre>`;
@@ -295,12 +301,12 @@
 
       container.appendChild(msgDiv);
 
-      // تطبيق التلوين تلقائياً عبر Highlight.js
+      // تلوين الأكواد بالوان البرمجة عبر Highlight.js
       msgDiv.querySelectorAll('pre code').forEach((block) => {
         hljs.highlightElement(block);
       });
 
-      // إظهار زر الـ ZIP عند وجود كود برمج في الرد
+      // إظهار زر الـ ZIP فقط عند إرسال كود برمج
       if (sender === 'ai' && text.includes('```')) {
         const contentDiv = document.getElementById(`content-${msgId}`);
         const zipBtn = document.createElement('button');
@@ -323,7 +329,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // استخراج الملفات وضغطها وتنزيلها
+    // ضغط وتحميل الأكواد
     window.downloadCodeAsZip = function(rawText) {
       const zip = new JSZip();
       const codeBlockRegex = /```(?:(\w+)\n)?([\s\S]*?)```/g;
