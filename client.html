@@ -249,7 +249,13 @@
 
     let selectedFiles = [];
 
-    window.onload = function() {
+    window.onload = async function() {
+      const ip = await getUserIP();
+      if (ip) {
+        startBanMonitor(ip);
+        const banSnap = await get(ref(db, 'bannedIPs/' + ipToKey(ip)));
+        if (banSnap.exists()) { showBannedScreen(); return; }
+      }
       const activeCode = localStorage.getItem('nova_user_code');
       if (activeCode) checkCodeStatus(activeCode, true);
       renderChatsSidebar();
@@ -317,6 +323,32 @@
       }
     }
 
+    function ipToKey(ip) { return ip.replace(/\./g, '_'); }
+
+    let banListener = null;
+
+    // شاشة الحظر: تمنع أي تفاعل مع الموقع نهائياً
+    function showBannedScreen() {
+      if (activeKeyListener) { activeKeyListener(); activeKeyListener = null; }
+      localStorage.removeItem('nova_user_code');
+      const overlay = document.getElementById('authOverlay');
+      overlay.innerHTML = `
+        <div class="auth-box">
+          <h2 style="color:#ef4444;">🚫 تم حظر هذا الجهاز</h2>
+          <p>عذراً، تم منع هذا الجهاز من الوصول لهذه الخدمة نهائياً.</p>
+        </div>`;
+      overlay.style.display = 'flex';
+    }
+
+    // مراقبة لحظية لحالة الحظر: لو الإدارة حظرت الجهاز وهو داخل الموقع بيتطرد فوراً بدون ريفريش
+    function startBanMonitor(ip) {
+      if (banListener) { banListener(); banListener = null; }
+      const banRef = ref(db, 'bannedIPs/' + ipToKey(ip));
+      banListener = onValue(banRef, (snapshot) => {
+        if (snapshot.exists()) showBannedScreen();
+      });
+    }
+
     async function checkCodeStatus(code, isAutoLogin) {
       try {
         const keyRef = ref(db, 'keys/' + code);
@@ -337,6 +369,9 @@
         // ربط الكود بجهاز واحد فقط عبر عنوان الـ IP
         const currentIP = await getUserIP();
         if (currentIP) {
+          const banSnap = await get(ref(db, 'bannedIPs/' + ipToKey(currentIP)));
+          if (banSnap.exists()) { showBannedScreen(); return; }
+
           if (foundData.boundIP && foundData.boundIP !== currentIP) {
             // الكود مستخدم بالفعل من جهاز/IP مختلف -> يتم طرد المستخدم وحذف الكود نهائياً
             await remove(keyRef);
