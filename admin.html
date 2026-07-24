@@ -3,115 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة الإدارة - Nova State</title>
+  <title>لوحة الإدارة الأساسية - Nova State</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
     body { background-color: #12161f; color: #e2e8f0; min-height: 100vh; }
     
-    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #1a2230; border-bottom: 1px solid #2a3447; }
+    /* الشريط العلوي */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: #1a2230;
+      border-bottom: 1px solid #2a3447;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
     .top-bar h3 { color: #d4af37; font-weight: 700; }
-    .user-controls { display: flex; gap: 10px; align-items: center; }
+    .user-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     
-    .btn-action { border: 1px solid #d4af37; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; background: transparent; color: #d4af37; }
-    .btn-action:hover { background: #d4af37; color: #12161f; }
-    .btn-logout { border-color: #ef4444; color: #ef4444; }
-    .btn-logout:hover { background: #ef4444; color: #fff; }
+    /* الأزرار العلوية الذهبية الحواف */
+    .btn-action { 
+      border: 1px solid #d4af37; 
+      padding: 8px 16px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-family: 'Cairo', sans-serif; 
+      transition: 0.2s ease;
+      background: transparent;
+      color: #d4af37;
+      font-size: 0.9rem;
+    }
+    .btn-action:hover { 
+      background: #d4af37; 
+      color: #12161f; 
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
 
-    .main-content { padding: 30px; max-width: 850px; margin: 0 auto; }
-    .card-box { background: #1a2230; border: 1px solid #2a3447; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
+    /* زر الخروج الاحمر */
+    .btn-logout { 
+      border-color: #ef4444; 
+      color: #ef4444; 
+      background: transparent;
+    }
+    .btn-logout:hover { 
+      background: #ef4444; 
+      color: #ffffff; 
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
 
+    /* المحتوى الرئيسي */
+    .main-content { padding: 30px; max-width: 800px; margin: 0 auto; }
+    .card-box { background: #1a2230; border: 1px solid #2a3447; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .permissions-badge { display: inline-block; background: #12161f; border: 1px solid #2a3447; padding: 6px 12px; border-radius: 20px; margin: 5px; font-size: 0.9rem; color: #38bdf8; }
+
+    /* تبديل الواجهات */
     .view-container { display: none; }
     .view-container.active { display: block; }
 
+    /* حقول الإدخال */
     .input-group { margin-bottom: 15px; text-align: right; }
     .input-group label { display: block; margin-bottom: 5px; color: #cbd5e1; font-weight: 600; }
-    .input-group input { width: 100%; padding: 10px; background: #12161f; border: 1px solid #2a3447; border-radius: 6px; color: #fff; outline: none; }
+    .input-group input, .input-group select { width: 100%; padding: 10px; background: #12161f; border: 1px solid #2a3447; border-radius: 6px; color: #fff; outline: none; }
+    .input-group input:focus, .input-group select:focus { border-color: #d4af37; }
+    
+    .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; font-family: 'Cairo', sans-serif; transition: 0.2s; }
+    .btn:hover { opacity: 0.9; }
 
-    .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; }
-
-    .item-card { background: #12161f; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #2a3447; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .card-actions { display: flex; gap: 8px; align-items: center; }
+    /* القوائم والبطاقات */
+    .list-container { margin-top: 15px; }
+    .item-card { background: #12161f; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2a3447; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    
+    .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .btn-accept { background: #22c55e; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-    .btn-rand { background: #3b82f6; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     .btn-delete { background: #ef4444; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-    .code-badge { background: #1a2230; border: 1px dashed #d4af37; color: #d4af37; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-family: monospace; }
+    .btn-edit { background: #3b82f6; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
 
-    /* التنبيه الداخلي */
-    #siteToast {
-      position: fixed;
-      bottom: -100px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-weight: 700;
-      color: #fff;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-      transition: all 0.4s ease;
-      z-index: 9999;
-      text-align: center;
-    }
-    #siteToast.show { bottom: 30px; }
-    #siteToast.success { background: #16a34a; border: 1px solid #22c55e; }
-    #siteToast.error { background: #dc2626; border: 1px solid #ef4444; }
+    /* النوافذ المنبثقة العامة */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #1a2230; padding: 25px; border-radius: 12px; width: 90%; max-width: 600px; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .modal-content h3 { color: #d4af37; margin-bottom: 15px; text-align: center; }
+
+    /* تخصيص صلاحيات الخيارات */
+    .permission-checkboxes { display: flex; flex-direction: column; gap: 10px; background: #12161f; padding: 15px; border-radius: 8px; border: 1px solid #2a3447; margin: 15px 0; text-align: right; }
+    .permission-checkboxes label { color: #e2e8f0; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .permission-checkboxes input { width: 18px; height: 18px; accent-color: #d4af37; cursor: pointer; }
+
+    /* التنبيهات */
+    #alertBox { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600; font-size: 0.9rem; }
   </style>
 </head>
 <body>
 
-  <script>
-    const userSession = JSON.parse(localStorage.getItem('nova_user'));
-    if (!userSession) window.location.href = 'login.html';
-  </script>
-
+  <!-- الشريط العلوي -->
   <div class="top-bar">
-    <h3>Nova State - الإدارة</h3>
+    <h3>لوحة الإدارة الأساسية</h3>
     <div class="user-controls">
-      <span id="userNameDisplay" style="color: #cbd5e1; font-weight:600;"></span>
-      <button class="btn-action" onclick="showView('keysView')">🔑 إدارة الأكواد</button>
-      <button class="btn-action" onclick="showView('requestsView')">🔔 طلبات الانضمام</button>
-      <button class="btn-action" onclick="showView('usersView')">👥 المسجلين</button>
+      <span id="userNameDisplay" style="font-weight: 600; color: #cbd5e1;">المدير العام</span>
+      
+      <button class="btn-action" onclick="showView('keysView')">🔑 إدارة أكواد المشتركين</button>
+      <button class="btn-action" onclick="showView('requestsView')">🔔 قبول الطلبات</button>
+      <button class="btn-action" onclick="showView('manageUsersView')">👥 مسؤول الإدارة</button>
+      
       <button class="btn-action btn-logout" onclick="logout()">تسجيل خروج</button>
     </div>
   </div>
 
+  <!-- المحتوى الرئيسي -->
   <div class="main-content">
+    <div id="alertBox"></div>
+
+    <!-- 1. واجهة الترحيب الأساسية -->
     <div class="card-box view-container active" id="welcomeView" style="text-align: center;">
       <h1 style="color: #d4af37; margin-bottom: 10px;">مرحباً بك في لوحة الإدارة</h1>
-      <p style="color: #94a3b8;">يمكنك التحكم بالطلبات، القبول، وتوليد الأكواد العشوائية بكل سهولة.</p>
+      <p style="color: #94a3b8; margin-bottom: 15px;">نظام إدارة المشتركين والأكواد الخاصة بـ Nova State.</p>
     </div>
 
-    <!-- 1. الأكواد -->
+    <!-- 2. واجهة إدارة الأكواد -->
     <div class="card-box view-container" id="keysView">
-      <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">الأكواد المفعّلة</h2>
+      <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">إدارة الأكواد</h2>
       <div class="input-group">
-        <label>إنشاء كود عشوائي أو يدوي جديد:</label>
+        <label>إضافة كود جديد:</label>
         <div style="display: flex; gap: 10px;">
-          <input type="text" id="manualKeyInput" placeholder="أدخل كود أو اتركه فارغاً لإنشاء عشوائي...">
-          <button class="btn" id="generateKeyBtn">إنشاء الكود ➕</button>
+          <input type="text" id="newKeyInput" placeholder="أدخل الكود الجديد..." autocomplete="off">
+          <button class="btn" id="addKeyBtn">إضافة الكود</button>
         </div>
       </div>
-      <div id="keysList"></div>
+      <div class="list-container" id="keysList">
+        <!-- الأكواد سيتم تحميلها هنا -->
+      </div>
     </div>
 
-    <!-- 2. الطلبات -->
+    <!-- 3. واجهة قبول طلبات الانضمام -->
     <div class="card-box view-container" id="requestsView">
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">طلبات الانضمام المعلقة</h2>
-      <div id="requestsList"></div>
+      <div class="list-container" id="requestsList">
+        <p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة حالياً.</p>
+      </div>
     </div>
 
-    <!-- 3. المستخدمين -->
-    <div class="card-box view-container" id="usersView">
-      <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">المستخدمين المعتمدين</h2>
-      <div id="usersList"></div>
+    <!-- 4. واجهة إدارة المستخدمين -->
+    <div class="card-box view-container" id="manageUsersView">
+      <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">المسؤولين والأعضاء</h2>
+      <div class="list-container" id="usersList">
+        <!-- مستخدمي النظام -->
+      </div>
     </div>
   </div>
 
-  <div id="siteToast"></div>
+  <!-- نافذة تعديل الصلاحيات -->
+  <div id="editPermissionsModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <h3>تعديل صلاحيات العضو</h3>
+      <p id="editUsernameTarget" style="text-align:center; color:#38bdf8; margin-bottom:10px; font-weight:600;"></p>
+      <div class="permission-checkboxes">
+        <label><input type="checkbox" id="editPermNotifications"> صلاحية القبول (قبول الطلبات)</label>
+        <label><input type="checkbox" id="editPermManageKeys"> صلاحية إدارة الأكواد</label>
+        <label><input type="checkbox" id="editPermCreateAccount"> صلاحية إنشاء حسابات جديدة</label>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn" style="flex:1; background:#22c55e; color:#fff;" onclick="saveUserPermissions()">حفظ التعديلات ✓</button>
+        <button class="btn" style="flex:1; background:#ef4444; color:#fff;" onclick="closeModal('editPermissionsModal')">إلغاء ✕</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB165FX1UTITowtK-il9rzIL_LwzfQwkpI",
@@ -126,163 +186,195 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    document.getElementById('userNameDisplay').innerText = userSession.username;
+    let currentEditingUserKey = null;
 
-    // تنبيهات داخلية في الصفحة
-    window.showToast = function(msg, isSuccess = false) {
-      const toast = document.getElementById('siteToast');
-      toast.innerText = msg;
-      toast.className = 'show ' + (isSuccess ? 'success' : 'error');
-      setTimeout(() => { toast.className = ''; }, 3500);
-    };
-
-    // توليد كود عشوائي
-    function generateRandomCode() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = 'NOVA-';
-      for (let i = 0; i < 5; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
-    }
-
+    // التنقل بين الواجهات
     window.showView = function(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
+      const targetView = document.getElementById(viewId);
+      if(targetView) targetView.classList.add('active');
+    };
+
+    window.closeModal = function(modalId) {
+      document.getElementById(modalId).style.display = 'none';
     };
 
     window.logout = function() {
-      localStorage.removeItem('nova_user');
-      window.location.href = 'login.html';
+      alert("تم تسجيل الخروج بنجاح.");
+      window.location.reload();
     };
 
-    // --- الأكواد ---
-    document.getElementById('generateKeyBtn').addEventListener('click', async () => {
-      const inputVal = document.getElementById('manualKeyInput').value.trim();
-      const keyCode = inputVal ? inputVal : generateRandomCode();
+    // --- 1. إدارة الأكواد ---
+    const addKeyBtn = document.getElementById("addKeyBtn");
+    const newKeyInput = document.getElementById("newKeyInput");
+    const keysList = document.getElementById("keysList");
 
-      await set(ref(db, 'keys/' + keyCode), {
-        active: true,
-        createdAt: new Date().toISOString()
-      });
-      document.getElementById('manualKeyInput').value = '';
-      showToast('تمت إضافة الكود بنجاح: ' + keyCode, true);
+    addKeyBtn.addEventListener("click", async () => {
+      const newKey = newKeyInput.value.trim();
+      if (!newKey) return alert("يرجى إدخال كود صحيح!");
+
+      try {
+        await set(ref(db, 'keys/' + newKey), { active: true, createdAt: Date.now() });
+        newKeyInput.value = "";
+      } catch (err) {
+        console.error("Error adding key:", err);
+      }
     });
 
     onValue(ref(db, 'keys'), (snapshot) => {
-      const list = document.getElementById('keysList');
-      list.innerHTML = '';
+      keysList.innerHTML = "";
       const data = snapshot.val();
       if (data) {
         Object.keys(data).forEach(key => {
-          list.innerHTML += `
-            <div class="item-card">
-              <div>الكود: <span class="code-badge">${key}</span></div>
+          const item = document.createElement("div");
+          item.className = "item-card";
+          item.innerHTML = `
+            <div><strong>الكود:</strong> ${key}</div>
+            <div class="card-actions">
+              <span class="permissions-badge">نشط</span>
               <button class="btn-delete" onclick="deleteKey('${key}')">حذف</button>
             </div>
           `;
+          keysList.appendChild(item);
         });
       } else {
-        list.innerHTML = '<p style="text-align:center; color:#94a3b8;">لا توجد أكواد مضافة.</p>';
+        keysList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا توجد أكواد مضافة حالياً.</p>`;
       }
     });
 
-    window.deleteKey = (key) => {
-      remove(ref(db, 'keys/' + key));
-      showToast('تم حذف الكود');
+    window.deleteKey = async (key) => {
+      if (confirm(`هل أنت تأكد من حذف الكود: ${key}؟`)) {
+        await remove(ref(db, 'keys/' + key));
+      }
     };
 
-    // --- طلبات الانضمام مع الكود العشوائي القابل للتغيير ---
-    let reqCodes = {};
+    // --- 2. إدارة طلبات الانضمام (Accept Requests) ---
+    const requestsList = document.getElementById("requestsList");
 
-    onValue(ref(db, 'join_requests'), (snapshot) => {
-      const list = document.getElementById('requestsList');
-      list.innerHTML = '';
+    onValue(ref(db, 'requests'), (snapshot) => {
+      requestsList.innerHTML = "";
       const data = snapshot.val();
       if (data) {
         Object.keys(data).forEach(reqId => {
-          const req = data[reqId];
-          if (!reqCodes[reqId]) reqCodes[reqId] = generateRandomCode();
-
-          list.innerHTML += `
-            <div class="item-card">
-              <div>
-                <strong>${req.username}</strong> (${req.email})
-                <br>
-                <small style="color:#94a3b8;">الكود المقترح: </small>
-                <span class="code-badge" id="code-tag-${reqId}">${reqCodes[reqId]}</span>
-              </div>
-              <div class="card-actions">
-                <button class="btn-rand" onclick="randomizeCode('${reqId}')">🔄 تغيير الكود</button>
-                <button class="btn-accept" onclick="acceptRequest('${reqId}', '${req.username}', '${req.email}', '${req.pass}')">قبول الطلب ✓</button>
-                <button class="btn-delete" onclick="rejectRequest('${reqId}')">رفض ✕</button>
-              </div>
+          const reqData = data[reqId];
+          const item = document.createElement("div");
+          item.className = "item-card";
+          item.innerHTML = `
+            <div>
+              <strong>المستخدم:</strong> ${reqData.username || reqId}<br>
+              <span style="font-size: 0.85rem; color: #94a3b8;">الكود المستخدم: ${reqData.code || 'غير متوفر'}</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn-accept" onclick="acceptRequest('${reqId}', '${reqData.username || reqId}')">قبول</button>
+              <button class="btn-delete" onclick="deleteRequest('${reqId}')">رفض</button>
             </div>
           `;
+          requestsList.appendChild(item);
         });
       } else {
-        list.innerHTML = '<p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة.</p>';
+        requestsList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة حالياً.</p>`;
       }
     });
 
-    // إعادة تغيير الكود عشوائياً للطلب المحدد
-    window.randomizeCode = (reqId) => {
-      reqCodes[reqId] = generateRandomCode();
-      document.getElementById('code-tag-' + reqId).innerText = reqCodes[reqId];
-      showToast('تم اختيار كود عشوائي جديد!');
+    window.acceptRequest = async (reqId, username) => {
+      try {
+        // نقل الطلب إلى جدول المستخدمين المقبولين
+        await set(ref(db, 'users/' + reqId), {
+          username: username,
+          role: 'member',
+          permissions: { notifications: false, manageKeys: false, createAccount: false },
+          joinedAt: Date.now()
+        });
+        // حذف الطلب من قائمة الطلبات المعلقة
+        await remove(ref(db, 'requests/' + reqId));
+        alert(`تم قبول المستخدم ${username} بنجاح.`);
+      } catch (err) {
+        console.error("Error accepting request:", err);
+      }
     };
 
-    // قبول الطلب بالكود المختار
-    window.acceptRequest = async (reqId, username, email, pass) => {
-      const finalCode = reqCodes[reqId];
-      const newUserId = push(ref(db, 'users')).key;
-
-      await set(ref(db, 'users/' + newUserId), {
-        username,
-        email,
-        pass,
-        userCode: finalCode,
-        role: 'member',
-        createdAt: new Date().toISOString()
-      });
-
-      await set(ref(db, 'keys/' + finalCode), { active: true });
-      await remove(ref(db, 'join_requests/' + reqId));
-
-      delete reqCodes[reqId];
-      showToast(`تم قبول الحساب بالكود: ${finalCode}`, true);
+    window.deleteRequest = async (reqId) => {
+      if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
+        await remove(ref(db, 'requests/' + reqId));
+      }
     };
 
-    window.rejectRequest = (reqId) => {
-      remove(ref(db, 'join_requests/' + reqId));
-      showToast('تم رفض الطلب');
-    };
+    // --- 3. إدارة المستخدمين والصلاحيات ---
+    const usersList = document.getElementById("usersList");
 
-    // --- المسجلين ---
     onValue(ref(db, 'users'), (snapshot) => {
-      const list = document.getElementById('usersList');
-      list.innerHTML = '';
+      usersList.innerHTML = "";
       const data = snapshot.val();
       if (data) {
-        Object.keys(data).forEach(userId => {
-          const u = data[userId];
-          list.innerHTML += `
-            <div class="item-card">
-              <div>
-                <strong>${u.username}</strong> | الكود المفعل: <span class="code-badge">${u.userCode || 'لا يوجد'}</span>
-              </div>
-              <button class="btn-delete" onclick="deleteUser('${userId}')">حذف الحساب</button>
+        Object.keys(data).forEach(userKey => {
+          const user = data[userKey];
+          const item = document.createElement("div");
+          item.className = "item-card";
+          item.innerHTML = `
+            <div>
+              <strong>${user.username || userKey}</strong><br>
+              <span style="font-size: 0.8rem; color: #38bdf8;">الدور: ${user.role || 'عضو'}</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="openEditPermissions('${userKey}', '${user.username || userKey}')">تعديل الصلاحيات</button>
+              <button class="btn-delete" onclick="deleteUser('${userKey}')">حذف</button>
             </div>
           `;
+          usersList.appendChild(item);
         });
       } else {
-        list.innerHTML = '<p style="text-align:center; color:#94a3b8;">لا يوجد مستخدمين مقبولين.</p>';
+        usersList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا يوجد مستخدمين مسجلين حالياً.</p>`;
       }
     });
 
-    window.deleteUser = (userId) => {
-      remove(ref(db, 'users/' + userId));
-      showToast('تم حذف الحساب');
+    window.openEditPermissions = function(userKey, username) {
+      currentEditingUserKey = userKey;
+      document.getElementById('editUsernameTarget').innerText = `المستخدم: ${username}`;
+      
+      // جلب الصلاحيات الحالية للمستخدم وضبط الـ Checkbox
+      onValue(ref(db, `users/${userKey}/permissions`), (snapshot) => {
+        const perms = snapshot.val() || {};
+        document.getElementById('editPermNotifications').checked = !!perms.notifications;
+        document.getElementById('editPermManageKeys').checked = !!perms.manageKeys;
+        document.getElementById('editPermCreateAccount').checked = !!perms.createAccount;
+      }, { onlyOnce: true });
+
+      document.getElementById('editPermissionsModal').style.display = 'flex';
+    };
+
+    window.saveUserPermissions = async function() {
+      if (!currentEditingUserKey) return;
+
+      const newPerms = {
+        notifications: document.getElementById('editPermNotifications').checked,
+        manageKeys: document.getElementById('editPermManageKeys').checked,
+        createAccount: document.getElementById('editPermCreateAccount').checked
+      };
+
+      try {
+        await update(ref(db, `users/${currentEditingUserKey}/permissions`), newPerms);
+        closeModal('editPermissionsModal');
+        alert("تم تحديث الصلاحيات بنجاح!");
+      } catch (err) {
+        console.error("Error updating permissions:", err);
+        alert("حدث خطأ أثناء حفظ الصلاحيات.");
+      }
+    };
+
+    window.deleteUser = async (userKey) => {
+      if (confirm("هل أنت متأكد من حذف هذا المستخدم من النظام؟")) {
+        await remove(ref(db, 'users/' + userKey));
+      }
+    };
+
+    // حماية الصفحة من فتح أدوات التطوير (Inspect Element)
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.onkeydown = function(e) {
+      if (e.keyCode == 123 || 
+          (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 67 || e.keyCode == 74)) || 
+          (e.ctrlKey && (e.keyCode == 85 || e.keyCode == 83))) {
+        return false;
+      }
     };
   </script>
 </body>
