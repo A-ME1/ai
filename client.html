@@ -76,7 +76,7 @@
     .message.user .msg-content { background: #1f6feb; border-color: #388bfd; color: #fff; border-bottom-left-radius: 2px; }
     .message.ai .msg-content { border-bottom-right-radius: 2px; }
 
-    .msg-image { max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 10px; display: block; border: 1px solid #30363d; }
+    .msg-image { max-width: 250px; max-height: 250px; border-radius: 8px; margin-bottom: 10px; display: block; border: 1px solid #30363d; }
 
     .code-block-wrapper {
       margin-top: 12px; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; background: #161b22; direction: ltr; text-align: left;
@@ -133,7 +133,7 @@
   <div id="authOverlay">
     <div class="auth-box">
       <h2>Nova AI</h2>
-      <p>أدخل كود التفعيل المأخوذ من لوحة الأدمن</p>
+      <p>أدخل كود التفعيل الخاص بك للمتابعة</p>
       <input type="text" id="accessCodeInput" placeholder="مثال: NOVA-XXXXX">
       <button onclick="validateAndLogin()">دخول 🚀</button>
     </div>
@@ -145,7 +145,7 @@
         <div class="brand-logo">N</div>
         <div class="brand-title">
           <h3>Nova Ai</h3>
-          <span>مــتـصــل (دعم SQL, Lua, JSON, JS)</span>
+          <span>متصل (شرح عربي - أكواد إنجليزية)</span>
         </div>
       </div>
       <div class="user-info">
@@ -157,20 +157,19 @@
     <div class="chat-container" id="chatContainer">
       <div class="message ai">
         <div class="avatar">AI</div>
-        <div class="msg-content" id="welcomeMsg">أهلاً بك 👋 يمكنك الآن رفع ملفات SQL, Lua, JSON, JS وحل مشاكلك بدقة عالية. (إذا كان الكود باللغة الإنجليزية، سيتم الرد وشرحه بالإنجليزية).</div>
+        <div class="msg-content" id="welcomeMsg">أهلاً بك يا صديقي في Nova AI. أنا جاهز لمساعدتك في أي وقت، سأقوم بشرح كل شيء لك باللغة العربية الواضحة، بينما ستبقى الأكواد والملفات الإنجليزية على طبيعتها البرمجية تماماً مع توفير خيارات تحميل فورية لها.</div>
       </div>
     </div>
 
     <div class="input-wrapper">
-      <div id="filePreviewIndicator">📁 تم إرفاق ملف: <span id="fileNameDisplay"></span></div>
+      <div id="filePreviewIndicator">📁 تم إرفاق: <span id="fileNameDisplay"></span></div>
       <div class="chat-input-box">
-        <!-- تم تعديل accept ليدعم ملفات sql, lua, json, js وغيرها -->
         <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)" accept="image/*,.txt,.js,.lua,.sql,.json,.py,.html,.css">
-        <label for="fileInput" class="upload-btn-label" title="رفع ملف (SQL, Lua, JSON, JS) أو صورة">📎</label>
+        <label for="fileInput" class="upload-btn-label" title="رفع ملف أو صورة">📎</label>
         
-        <textarea id="userInput" placeholder="اكتب رسالتك أو اطلب تحليل الكود..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+        <textarea id="userInput" placeholder="اكتب طلبك أو أرفق السكربت هنا..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
         
-        <button class="send-btn" onclick="sendMessage()">ارسال</button>
+        <button class="send-btn" onclick="sendMessage()">إرسال</button>
       </div>
     </div>
   </div>
@@ -201,7 +200,7 @@
     let conversationHistory = [
       { 
         role: "system", 
-        content: "You are Nova AI, an expert programming assistant supporting SQL, Lua, JSON, and JavaScript. CRITICAL LANGUAGE RULE: If the user's prompt, request, or attached code is primarily in English, you MUST reply entirely in English (explaining the problem, code, and providing solutions in English). If the user speaks Arabic, reply in Arabic. Never translate English code or English technical queries into Arabic unless explicitly requested." 
+        content: "You are Nova AI, an expert programming assistant. STRICT RULES: 1) ALWAYS reply to the user in fluent, natural Arabic for all explanations, analysis, and text. 2) Keep all programming code blocks, SQL queries, Lua scripts, JSON, JavaScript, functions, variables, and technical syntax strictly in their original English format (never translate code or code syntax). 3) Always provide clean code blocks when generating code so the user can easily copy or download the files." 
       }
     ];
 
@@ -228,7 +227,7 @@
         const snapshot = await get(keyRef);
 
         if (!snapshot.exists()) {
-          showToast('الكود المدخل غير صحيح أو غير مسجل!');
+          showToast('الكود المدخل غير صحيح!');
           if (isAutoLogin) logout();
           return;
         }
@@ -237,7 +236,7 @@
         const now = Date.now();
 
         if (foundData.expireAt && now > foundData.expireAt) {
-          showToast('عفواً، لقد انتهت صلاحية هذا الكود!');
+          showToast('عفواً، انتهت صلاحية هذا الكود!');
           if (isAutoLogin) logout();
           return;
         }
@@ -253,7 +252,7 @@
         document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
       } catch (err) {
         console.error(err);
-        showToast('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
+        showToast('خطأ في الاتصال بقاعدة البيانات.');
       }
     }
 
@@ -321,12 +320,12 @@
       if (attachedFileType === 'image') {
         displayHtml = `<img src="${attachedFileContent}" class="msg-image"><br>` + displayHtml;
         apiUserContent = [
-          { type: "text", text: text || "Analyze this image and explain in detail." },
+          { type: "text", text: text || "قم بتحليل هذه الصورة واشرحها بالتفصيل باللغة العربية." },
           { type: "image_url", image_url: { url: attachedFileContent } }
         ];
       } else if (attachedFileType === 'text') {
         apiUserContent = `${text}\n\n[Attached File (${attachedFileName}):\n${attachedFileContent}]`;
-        displayHtml += `\n📁 [Attached File: ${attachedFileName}]`;
+        displayHtml += `\n📁 [الملف المرفق: ${attachedFileName}]`;
       }
 
       addMessageCustom(displayHtml, 'user');
@@ -342,7 +341,7 @@
       attachedFileName = "";
 
       conversationHistory.push({ role: "user", content: apiUserContent });
-      const typingId = addMessagePlain('Analyzing code and looking for issues...', 'ai');
+      const typingId = addMessagePlain('جاري معالجة طلبك...', 'ai');
 
       try {
         const selectedModel = (currentFileType === 'image') ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
@@ -362,7 +361,7 @@
 
         if (!response.ok) {
           removeMessage(typingId);
-          showToast(`Response Error (${response.status})`);
+          showToast(`خطأ في الاستجابة (${response.status})`);
           return;
         }
 
@@ -376,7 +375,7 @@
         }
       } catch (error) {
         removeMessage(typingId);
-        showToast('Connection Error: ' + error.message);
+        showToast('خطأ في الاتصال: ' + error.message);
       }
     }
 
@@ -428,10 +427,10 @@
           return `
             <div class="code-block-wrapper">
               <div class="code-header">
-                <span>${validLang.toUpperCase()} (${code.trim().split('\n').length} lines)</span>
+                <span>${validLang.toUpperCase()} (${code.trim().split('\n').length} أسطر)</span>
                 <div class="code-actions">
-                  <button class="code-btn" onclick="copyCode('${codeId}')">📋 Copy</button>
-                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">💾 Download</button>
+                  <button class="code-btn" onclick="copyCode('${codeId}')">📋 نسخ</button>
+                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">💾 تحميل الملف</button>
                 </div>
               </div>
               <pre><code class="language-${validLang}">${safeCode}</code></pre>
@@ -455,7 +454,7 @@
         const contentDiv = document.getElementById(`content-${msgId}`);
         const zipBtn = document.createElement('button');
         zipBtn.className = 'download-zip-btn';
-        zipBtn.innerHTML = '📦 Download Project as ZIP';
+        zipBtn.innerHTML = '📦 تحميل الملفات كـ ZIP';
         zipBtn.onclick = () => downloadCodeAsZip(text);
         contentDiv.appendChild(zipBtn);
       }
@@ -471,7 +470,7 @@
       const codeText = window[codeId];
       if (codeText) {
         navigator.clipboard.writeText(codeText);
-        showToast('Code copied successfully! 📋');
+        showToast('تم نسخ الكود بنجاح! 📋');
       }
     };
 
@@ -498,8 +497,6 @@
       let match;
       let fileIndex = 1;
 
-      let projectBaseName = "nova_project";
-
       while ((match = codeBlockRegex.exec(rawText)) !== null) {
         let lang = (match[1] || 'txt').toLowerCase();
         let codeContent = match[2].trim();
@@ -519,7 +516,7 @@
       }
 
       zip.generateAsync({ type: "blob" }).then(function(content) {
-        saveAs(content, `${projectBaseName}.zip`);
+        saveAs(content, `nova_project.zip`);
       });
     }
   </script>
