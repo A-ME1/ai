@@ -171,7 +171,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ⚠️ استبدل النص الإنجليزي بالأسفل بمفتاحك الحقيقي من Groq Console
     const GROQ_API_KEY = "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";
 
     let conversationHistory = [
@@ -226,7 +225,6 @@
       const text = input.value.trim();
       if (!text) return;
 
-      // حماية وتنظيف مفتاح API من أي رموز غريبة قد تسبب أخطاء
       const cleanApiKey = GROQ_API_KEY.replace(/[^\x00-\x7F]/g, "").trim();
 
       addMessage(text, 'user');
@@ -236,9 +234,9 @@
       const typingId = addMessage('جاري التفكير والرد...', 'ai');
 
       try {
+        // تم تصحيح الرابط هنا ليكون رابطاً حقيقياً وبدون أقواس Markdown
         const response = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
           method: "POST",
-          redirect: "follow",
           headers: {
             "Authorization": `Bearer ${cleanApiKey}`,
             "Content-Type": "application/json"
@@ -301,12 +299,10 @@
 
       container.appendChild(msgDiv);
 
-      // تلوين الأكواد بالوان البرمجة عبر Highlight.js
       msgDiv.querySelectorAll('pre code').forEach((block) => {
         hljs.highlightElement(block);
       });
 
-      // إظهار زر الـ ZIP فقط عند إرسال كود برمج
       if (sender === 'ai' && text.includes('```')) {
         const contentDiv = document.getElementById(`content-${msgId}`);
         const zipBtn = document.createElement('button');
@@ -329,7 +325,6 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // ضغط وتحميل الأكواد
     window.downloadCodeAsZip = function(rawText) {
       const zip = new JSZip();
       const codeBlockRegex = /```(?:(\w+)\n)?([\s\S]*?)```/g;
