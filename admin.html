@@ -65,14 +65,22 @@
     /* حقول الإدخال */
     .input-group { margin-bottom: 15px; text-align: right; }
     .input-group label { display: block; margin-bottom: 5px; color: #cbd5e1; font-weight: 600; }
-    .input-group input, .input-group select { width: 100%; padding: 10px; background: #12161f; border: 1px solid #2a3447; border-radius: 6px; color: #fff; outline: none; }
-    .input-group input:focus, .input-group select:focus { border-color: #d4af37; }
+    .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 10px; background: #12161f; border: 1px solid #2a3447; border-radius: 6px; color: #fff; outline: none; }
+    .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: #d4af37; }
     
-    .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; font-family: 'Cairo', sans-serif; transition: 0.2s; }
+    /* تخصيص صندوق الكتابة المتعدد الأسطر لمنع التعليق وتنظيم المساحة */
+    .input-group textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+    
+    .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; font-family: 'Cairo', sans-serif; transition: 0.2s; width: 100%; }
     .btn:hover { opacity: 0.9; }
 
     /* القوائم والبطاقات */
-    .list-container { margin-top: 15px; }
+    .list-container { margin-top: 15px; max-height: 400px; overflow-y: auto; padding-left: 5px; }
     .item-card { background: #12161f; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2a3447; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     
     .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -89,9 +97,6 @@
     .permission-checkboxes { display: flex; flex-direction: column; gap: 10px; background: #12161f; padding: 15px; border-radius: 8px; border: 1px solid #2a3447; margin: 15px 0; text-align: right; }
     .permission-checkboxes label { color: #e2e8f0; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
     .permission-checkboxes input { width: 18px; height: 18px; accent-color: #d4af37; cursor: pointer; }
-
-    /* التنبيهات */
-    #alertBox { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -124,12 +129,11 @@
     <div class="card-box view-container" id="keysView">
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">إدارة الأكواد</h2>
       <div class="input-group">
-        <label>إضافة كود جديد:</label>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="newKeyInput" placeholder="أدخل الكود الجديد..." autocomplete="off">
-          <button class="btn" id="addKeyBtn">إضافة الكود</button>
-        </div>
+        <label>إضافة أكواد متعددة (كل كود في سطر مستقل):</label>
+        <textarea id="newKeyInput" placeholder="اكتب أو الصق الأكواد هنا...&#10;كود_1&#10;كود_2&#10;كود_3"></textarea>
       </div>
+      <button class="btn" id="addKeyBtn">إضافة الأكواد دفعة واحدة</button>
+      
       <div class="list-container" id="keysList">
         <!-- الأكواد سيتم تحميلها هنا -->
       </div>
@@ -163,8 +167,8 @@
         <label><input type="checkbox" id="editPermCreateAccount"> صلاحية إنشاء حسابات جديدة</label>
       </div>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="btn" style="flex:1; background:#22c55e; color:#fff;" onclick="saveUserPermissions()">حفظ التعديلات ✓</button>
-        <button class="btn" style="flex:1; background:#ef4444; color:#fff;" onclick="closeModal('editPermissionsModal')">إلغاء ✕</button>
+        <button class="btn" style="background:#22c55e; color:#fff;" onclick="saveUserPermissions()">حفظ التعديلات ✓</button>
+        <button class="btn" style="background:#ef4444; color:#fff;" onclick="closeModal('editPermissionsModal')">إلغاء ✕</button>
       </div>
     </div>
   </div>
@@ -188,7 +192,6 @@
 
     let currentEditingUserKey = null;
 
-    // التنقل بين الواجهات
     window.showView = function(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
       const targetView = document.getElementById(viewId);
@@ -204,20 +207,32 @@
       window.location.reload();
     };
 
-    // --- 1. إدارة الأكواد ---
+    // --- 1. إدارة الأكواد (يدعم إدخال عدة أسطر دفعة واحدة بدون تعليق) ---
     const addKeyBtn = document.getElementById("addKeyBtn");
     const newKeyInput = document.getElementById("newKeyInput");
     const keysList = document.getElementById("keysList");
 
     addKeyBtn.addEventListener("click", async () => {
-      const newKey = newKeyInput.value.trim();
-      if (!newKey) return alert("يرجى إدخال كود صحيح!");
+      const textContent = newKeyInput.value.trim();
+      if (!textContent) return alert("يرجى إدخال كود واحد على الأقل!");
+
+      // تقسيم النصوص على حسب الأسطر الجديدة لكي تدعم الإدخال الطويل وتحت بعضه
+      const lines = textContent.split('\n');
+      let addedCount = 0;
 
       try {
-        await set(ref(db, 'keys/' + newKey), { active: true, createdAt: Date.now() });
+        for (let line of lines) {
+          const cleanKey = line.trim();
+          if (cleanKey) {
+            await set(ref(db, 'keys/' + cleanKey), { active: true, createdAt: Date.now() });
+            addedCount++;
+          }
+        }
         newKeyInput.value = "";
+        alert(`تم إضافة ${addedCount} كود بنجاح!`);
       } catch (err) {
-        console.error("Error adding key:", err);
+        console.error("Error adding keys:", err);
+        alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
       }
     });
 
@@ -243,12 +258,12 @@
     });
 
     window.deleteKey = async (key) => {
-      if (confirm(`هل أنت تأكد من حذف الكود: ${key}؟`)) {
+      if (confirm(`هل أنت متأكد من حذف الكود: ${key}؟`)) {
         await remove(ref(db, 'keys/' + key));
       }
     };
 
-    // --- 2. إدارة طلبات الانضمام (Accept Requests) ---
+    // --- 2. إدارة طلبات الانضمام ---
     const requestsList = document.getElementById("requestsList");
 
     onValue(ref(db, 'requests'), (snapshot) => {
@@ -278,14 +293,12 @@
 
     window.acceptRequest = async (reqId, username) => {
       try {
-        // نقل الطلب إلى جدول المستخدمين المقبولين
         await set(ref(db, 'users/' + reqId), {
           username: username,
           role: 'member',
           permissions: { notifications: false, manageKeys: false, createAccount: false },
           joinedAt: Date.now()
         });
-        // حذف الطلب من قائمة الطلبات المعلقة
         await remove(ref(db, 'requests/' + reqId));
         alert(`تم قبول المستخدم ${username} بنجاح.`);
       } catch (err) {
@@ -329,9 +342,8 @@
 
     window.openEditPermissions = function(userKey, username) {
       currentEditingUserKey = userKey;
-      document.getElementById('editUsernameTarget').innerText = `المستخدم: ${username}`;
+      document.getElementById('editUsernameTarget', username).innerText = `المستخدم: ${username}`;
       
-      // جلب الصلاحيات الحالية للمستخدم وضبط الـ Checkbox
       onValue(ref(db, `users/${userKey}/permissions`), (snapshot) => {
         const perms = snapshot.val() || {};
         document.getElementById('editPermNotifications').checked = !!perms.notifications;
@@ -367,7 +379,6 @@
       }
     };
 
-    // حماية الصفحة من فتح أدوات التطوير (Inspect Element)
     document.addEventListener('contextmenu', event => event.preventDefault());
     document.onkeydown = function(e) {
       if (e.keyCode == 123 || 
