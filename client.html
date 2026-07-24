@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nova AI - العميل المتطور</title>
+  <title>Nova Ai</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -147,8 +147,8 @@
       <div class="brand">
         <div class="brand-logo">N</div>
         <div class="brand-title">
-          <h3>مساعد Nova الذكي</h3>
-          <span>متصل وجاهز للمحادثة، قراءة الصور والملفات والبرمجة</span>
+          <h3>Nova Ai</h3>
+          <span>مــتـصــل</span>
         </div>
       </div>
       <div class="user-info">
@@ -165,15 +165,15 @@
     </div>
 
     <div class="input-wrapper">
-      <div id="filePreviewIndicator">📁 تم إرفاق ملف: <span id="fileNameDisplay"></span></div>
+      <div id="filePreviewIndicator"> تم إرفاق ملف: <span id="fileNameDisplay"></span></div>
       <div class="chat-input-box">
         <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)" accept="image/*,.txt,.js,.py,.html,.css,.json">
         <label for="fileInput" class="upload-btn-label" title="رفع صورة أو ملف">📎</label>
         
         <!-- تم التعديل إلى Textarea لدعم الأسطر والمسافات بدون تهنيج -->
-        <textarea id="userInput" placeholder="اكتب رسالتك أو اطلب سكربت معين (اضغط Shift + Enter لسطر جديد)..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+        <textarea id="userInput" placeholder= "اكتب رسالتك" rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
         
-        <button class="send-btn" onclick="sendMessage()">إرسال 🚀</button>
+        <button class="send-btn" onclick="sendMessage()">ارسال</button>
       </div>
     </div>
   </div>
@@ -351,8 +351,7 @@
 
       conversationHistory.push({ role: "user", content: apiUserContent });
       
-      // إظهار مؤشر الكتابة للـ AI بشكل مؤقت ريثما يأتي الرد
-      const typingId = addMessagePlain('جاري التفكير ومعالجة الطلب...', 'ai');
+      const typingId = addMessagePlain('جاري المراجعة ..!', 'ai');
 
       try {
         const selectedModel = (currentFileType === 'image') ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
@@ -449,8 +448,8 @@
               <div class="code-header">
                 <span>${validLang.toUpperCase()}</span>
                 <div class="code-actions">
-                  <button class="code-btn" onclick="copyCode('${codeId}')">📋 نسخ الكود</button>
-                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">💾 تنزيل</button>
+                  <button class="code-btn" onclick="copyCode('${codeId}')">نسخ الكود</button>
+                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">تنزيل</button>
                 </div>
               </div>
               <pre><code class="language-${validLang}">${escapeHtml(code.trim())}</code></pre>
