@@ -9,7 +9,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
     body { background-color: #12161f; color: #e2e8f0; min-height: 100vh; }
     
-    /* الشريط العلوي */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -22,7 +21,6 @@
     .top-bar h3 { color: #d4af37; font-weight: 700; }
     .user-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     
-    /* الأزرار العلوية الذهبية الحواف */
     .btn-action { 
       border: 1px solid #d4af37; 
       padding: 8px 16px; 
@@ -35,34 +33,17 @@
       color: #d4af37;
       font-size: 0.9rem;
     }
-    .btn-action:hover { 
-      background: #d4af37; 
-      color: #12161f; 
-      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-    }
+    .btn-action:hover { background: #d4af37; color: #12161f; }
+    .btn-logout { border-color: #ef4444; color: #ef4444; }
+    .btn-logout:hover { background: #ef4444; color: #ffffff; }
 
-    /* زر الخروج الاحمر */
-    .btn-logout { 
-      border-color: #ef4444; 
-      color: #ef4444; 
-      background: transparent;
-    }
-    .btn-logout:hover { 
-      background: #ef4444; 
-      color: #ffffff; 
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
-    }
-
-    /* المحتوى الرئيسي */
     .main-content { padding: 30px; max-width: 800px; margin: 0 auto; }
     .card-box { background: #1a2230; border: 1px solid #2a3447; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .permissions-badge { display: inline-block; background: #12161f; border: 1px solid #2a3447; padding: 6px 12px; border-radius: 20px; margin: 5px; font-size: 0.9rem; color: #38bdf8; }
 
-    /* تبديل الواجهات */
     .view-container { display: none; }
     .view-container.active { display: block; }
 
-    /* حقول الإدخال */
     .input-group { margin-bottom: 15px; text-align: right; }
     .input-group label { display: block; margin-bottom: 5px; color: #cbd5e1; font-weight: 600; }
     .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 10px; background: #12161f; border: 1px solid #2a3447; border-radius: 6px; color: #fff; outline: none; }
@@ -70,16 +51,16 @@
     
     .input-group textarea {
       resize: vertical;
-      min-height: 100px;
-      line-height: 1.6;
+      min-height: 120px;
+      line-height: 1.8;
       font-size: 1rem;
+      white-space: pre-wrap;
     }
     
     .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; font-family: 'Cairo', sans-serif; transition: 0.2s; width: 100%; margin-top: 5px; }
     .btn:hover { opacity: 0.9; }
     .btn-secondary { background: #3b82f6; color: #fff; }
 
-    /* القوائم والبطاقات */
     .list-container { margin-top: 15px; max-height: 400px; overflow-y: auto; padding-left: 5px; }
     .item-card { background: #12161f; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2a3447; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     
@@ -88,12 +69,10 @@
     .btn-delete { background: #ef4444; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     .btn-edit { background: #3b82f6; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
 
-    /* النوافذ المنبثقة العامة */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: #1a2230; padding: 25px; border-radius: 12px; width: 90%; max-width: 600px; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .modal-content h3 { color: #d4af37; margin-bottom: 15px; text-align: center; }
 
-    /* تخصيص صلاحيات الخيارات */
     .permission-checkboxes { display: flex; flex-direction: column; gap: 10px; background: #12161f; padding: 15px; border-radius: 8px; border: 1px solid #2a3447; margin: 15px 0; text-align: right; }
     .permission-checkboxes label { color: #e2e8f0; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
     .permission-checkboxes input { width: 18px; height: 18px; accent-color: #d4af37; cursor: pointer; }
@@ -101,90 +80,76 @@
 </head>
 <body>
 
-  <!-- الشريط العلوي -->
   <div class="top-bar">
     <h3>لوحة الإدارة الأساسية</h3>
     <div class="user-controls">
-      <span id="userNameDisplay" style="font-weight: 600; color: #cbd5e1;">المدير العام</span>
-      
-      <button class="btn-action" onclick="showView('keysView')">🔑 إدارة أكواد المشتركين</button>
-      <button class="btn-action" onclick="showView('requestsView')">🔔 قبول الطلبات</button>
-      <button class="btn-action" onclick="showView('manageUsersView')">👥 مسؤول الإدارة</button>
-      
-      <button class="btn-action btn-logout" onclick="logout()">تسجيل خروج</button>
+      <span style="font-weight: 600; color: #cbd5e1;">المدير العام</span>
+      <button class="btn-action" onclick="showView('keysView')">🔑 إدارة الأكواد</button>
+      <button class="btn-action" onclick="showView('requestsView')">🔔 الطلبات</button>
+      <button class="btn-action" onclick="showView('manageUsersView')">👥 المستخدمين</button>
+      <button class="btn-action btn-logout" onclick="logout()">خروج</button>
     </div>
   </div>
 
-  <!-- المحتوى الرئيسي -->
   <div class="main-content">
-    <div id="alertBox"></div>
-
-    <!-- 1. واجهة الترحيب الأساسية -->
     <div class="card-box view-container active" id="welcomeView" style="text-align: center;">
       <h1 style="color: #d4af37; margin-bottom: 10px;">مرحباً بك في لوحة الإدارة</h1>
-      <p style="color: #94a3b8; margin-bottom: 15px;">نظام إدارة المشتركين والأكواد الخاصة بـ Nova State.</p>
+      <p style="color: #94a3b8;">نظام إدارة المشتركين والأكواد الخاصة بـ Nova State.</p>
     </div>
 
-    <!-- 2. واجهة إدارة الأكواد -->
+    <!-- واجهة إدارة الأكواد المحدثة -->
     <div class="card-box view-container" id="keysView">
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">إدارة الأكواد</h2>
       
-      <!-- أدوات توليد كود عشوائي وتحديد المدة -->
+      <!-- قسم التوليد التلقائي السريع مع تحديد المدة -->
       <div style="background: #12161f; padding: 15px; border-radius: 8px; border: 1px solid #2a3447; margin-bottom: 20px;">
-        <h3 style="color: #38bdf8; font-size: 1rem; margin-bottom: 10px; text-align: right;">توليد كود عشوائي سريعة</h3>
+        <h3 style="color: #38bdf8; font-size: 1rem; margin-bottom: 10px; text-align: right;">توليد كود عشوائي تلقائياً (NOVA-XXXXX)</h3>
         <div class="input-group">
-          <label>مدة صلاحية الكود (بالأيام):</label>
-          <input type="number" id="keyDurationDays" value="30" min="1" placeholder="عدد الأيام...">
+          <label>المدة المحددة لهذا الكود (بالأيام):</label>
+          <input type="number" id="generatedDuration" value="30" min="1">
         </div>
-        <button class="btn btn-secondary" id="generateRandomKeyBtn">🎲 توليد كود عشوائي ووضعه في القائمة</button>
+        <button class="btn btn-secondary" id="generateAndSaveBtn">⚡ توليد كود عشوائي وحفظه فوراً بالمدة المحددة</button>
       </div>
 
       <div class="input-group">
-        <label>إضافة أكواد متعددة (كل كود في سطر مستقل):</label>
-        <textarea id="newKeyInput" placeholder="اكتب أو الصق الأكواد هنا...&#10;كود_1&#10;كود_2"></textarea>
+        <label>أو إضافة أكواد متعددة يدوياً (كل كود في سطر - تدعم السطور الكثيرة بدون تعليق):</label>
+        <textarea id="newKeyInput" placeholder="NOVA-A1B2C&#10;NOVA-D3E4F"></textarea>
       </div>
       
       <div class="input-group">
-        <label>مدة الصلاحية العامة للأكواد المكتوبة أعلاه (بالأيام):</label>
+        <label>مدة الصلاحية للأكواد اليدوية المكتوبة بالأعلى (بالأيام):</label>
         <input type="number" id="manualDurationDays" value="30" min="1">
       </div>
 
-      <button class="btn" id="addKeyBtn">إضافة الأكواد لقاعدة البيانات</button>
+      <button class="btn" id="addKeyBtn">إضافة الأكواد اليدوية لقاعدة البيانات</button>
       
-      <div class="list-container" id="keysList">
-        <!-- الأكواد سيتم تحميلها هنا -->
-      </div>
+      <div class="list-container" id="keysList"></div>
     </div>
 
-    <!-- 3. واجهة قبول طلبات الانضمام -->
     <div class="card-box view-container" id="requestsView">
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">طلبات الانضمام المعلقة</h2>
       <div class="list-container" id="requestsList">
-        <p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة حالياً.</p>
+        <p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة.</p>
       </div>
     </div>
 
-    <!-- 4. واجهة إدارة المستخدمين -->
     <div class="card-box view-container" id="manageUsersView">
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">المسؤولين والأعضاء</h2>
-      <div class="list-container" id="usersList">
-        <!-- مستخدمي النظام -->
-      </div>
+      <div class="list-container" id="usersList"></div>
     </div>
   </div>
 
-  <!-- نافذة تعديل الصلاحيات -->
   <div id="editPermissionsModal" class="modal">
     <div class="modal-content" style="max-width: 450px;">
       <h3>تعديل صلاحيات العضو</h3>
       <p id="editUsernameTarget" style="text-align:center; color:#38bdf8; margin-bottom:10px; font-weight:600;"></p>
       <div class="permission-checkboxes">
-        <label><input type="checkbox" id="editPermNotifications"> صلاحية القبول (قبول الطلبات)</label>
-        <label><input type="checkbox" id="editPermManageKeys"> صلاحية إدارة الأكواد</label>
-        <label><input type="checkbox" id="editPermCreateAccount"> صلاحية إنشاء حسابات جديدة</label>
+        <label><input type="checkbox" id="editPermNotifications"> قبول الطلبات</label>
+        <label><input type="checkbox" id="editPermManageKeys"> إدارة الأكواد</label>
+        <label><input type="checkbox" id="editPermCreateAccount"> إنشاء حسابات</label>
       </div>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="btn" style="background:#22c55e; color:#fff; margin-top:0;" onclick="saveUserPermissions()">حفظ التعديلات ✓</button>
+        <button class="btn" style="background:#22c55e; color:#fff; margin-top:0;" onclick="saveUserPermissions()">حفظ ✓</button>
         <button class="btn" style="background:#ef4444; color:#fff; margin-top:0;" onclick="closeModal('editPermissionsModal')">إلغاء ✕</button>
       </div>
     </div>
@@ -206,13 +171,11 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-
     let currentEditingUserKey = null;
 
     window.showView = function(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
-      const targetView = document.getElementById(viewId);
-      if(targetView) targetView.classList.add('active');
+      document.getElementById(viewId).classList.add('active');
     };
 
     window.closeModal = function(modalId) {
@@ -224,42 +187,45 @@
       window.location.reload();
     };
 
-    // دالة لتوليد كود عشوائي فريد
-    function generateRandomString(length = 10) {
+    // دالة لتوليد الكود بالصيغة NOVA-XXXXX
+    function generateNovaCode() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = 'NOVA-';
-      for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      let randomPart = '';
+      for (let i = 0; i < 5; i++) {
+        randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      return result;
+      return `NOVA-${randomPart}`;
     }
 
-    // زر توليد كود عشوائي وإضافته مباشرة لصندوق النصوص
-    document.getElementById("generateRandomKeyBtn").addEventListener("click", () => {
-      const randomCode = generateRandomString(8);
-      const newKeyInput = document.getElementById("newKeyInput");
-      if (newKeyInput.value.trim() !== "") {
-        newKeyInput.value += "\n" + randomCode;
-      } else {
-        newKeyInput.value = randomCode;
+    // زر التوليد التلقائي الفوري وحفظه مع إظهار النتيجة والمدة
+    document.getElementById("generateAndSaveBtn").addEventListener("click", async () => {
+      const durationDays = parseInt(document.getElementById("generatedDuration").value) || 30;
+      const newCode = generateNovaCode();
+      const expireAt = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
+
+      try {
+        await set(ref(db, 'keys/' + newCode), {
+          active: true,
+          createdAt: Date.now(),
+          durationDays: durationDays,
+          expireAt: expireAt
+        });
+        alert(`تم توليد الكود بنجاح وإنشاؤه في قاعدة البيانات!\n\nالكود: ${newCode}\nالمدة: ${durationDays} يوم`);
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء حفظ الكود.");
       }
     });
 
-    // --- 1. إدارة الأكواد والمدة ---
-    const addKeyBtn = document.getElementById("addKeyBtn");
-    const newKeyInput = document.getElementById("newKeyInput");
-    const keysList = document.getElementById("keysList");
-
-    addKeyBtn.addEventListener("click", async () => {
-      const textContent = newKeyInput.value.trim();
+    // إضافة الأكواد المتعددة يدوياً
+    document.getElementById("addKeyBtn").addEventListener("click", async () => {
+      const textContent = document.getElementById("newKeyInput").value;
       const durationDays = parseInt(document.getElementById("manualDurationDays").value) || 30;
       
-      if (!textContent) return alert("يرجى إدخال كود واحد على الأقل أو توليد كود عشوائي!");
+      if (!textContent.trim()) return alert("يرجى كتابة أو لصق الأكواد في الصندوق!");
 
-      const lines = textContent.split('\n');
+      const lines = textContent.split(/\r?\n/);
       let addedCount = 0;
-      
-      // حساب تاريخ انتهاء الصلاحية بالميللي ثانية
       const expireAt = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
 
       try {
@@ -275,15 +241,15 @@
             addedCount++;
           }
         }
-        newKeyInput.value = "";
+        document.getElementById("newKeyInput").value = "";
         alert(`تم إضافة ${addedCount} كود بنجاح لمدة ${durationDays} يوم!`);
       } catch (err) {
-        console.error("Error adding keys:", err);
         alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
       }
     });
 
     onValue(ref(db, 'keys'), (snapshot) => {
+      const keysList = document.getElementById("keysList");
       keysList.innerHTML = "";
       const data = snapshot.val();
       if (data) {
@@ -296,7 +262,7 @@
           item.innerHTML = `
             <div>
               <strong>الكود:</strong> ${key}<br>
-              <span style="font-size: 0.8rem; color: #38bdf8;">الصلاحية الباقية: ${daysLeft > 0 ? daysLeft + ' يوم' : 'منتهي الصلاحية'}</span>
+              <span style="font-size: 0.8rem; color: #38bdf8;">الصلاحية: ${daysLeft > 0 ? daysLeft + ' يوم' : 'منتهي الصلاحية'}</span>
             </div>
             <div class="card-actions">
               <button class="btn-delete" onclick="deleteKey('${key}')">حذف</button>
@@ -315,10 +281,8 @@
       }
     };
 
-    // --- 2. إدارة طلبات الانضمام ---
-    const requestsList = document.getElementById("requestsList");
-
     onValue(ref(db, 'requests'), (snapshot) => {
+      const requestsList = document.getElementById("requestsList");
       requestsList.innerHTML = "";
       const data = snapshot.val();
       if (data) {
@@ -329,7 +293,7 @@
           item.innerHTML = `
             <div>
               <strong>المستخدم:</strong> ${reqData.username || reqId}<br>
-              <span style="font-size: 0.85rem; color: #94a3b8;">الكود المستخدم: ${reqData.code || 'غير متوفر'}</span>
+              <span style="font-size: 0.85rem; color: #94a3b8;">الكود: ${reqData.code || 'غير متوفر'}</span>
             </div>
             <div class="card-actions">
               <button class="btn-accept" onclick="acceptRequest('${reqId}', '${reqData.username || reqId}')">قبول</button>
@@ -339,35 +303,22 @@
           requestsList.appendChild(item);
         });
       } else {
-        requestsList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة حالياً.</p>`;
+        requestsList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا توجد طلبات جديدة.</p>`;
       }
     });
 
     window.acceptRequest = async (reqId, username) => {
-      try {
-        await set(ref(db, 'users/' + reqId), {
-          username: username,
-          role: 'member',
-          permissions: { notifications: false, manageKeys: false, createAccount: false },
-          joinedAt: Date.now()
-        });
-        await remove(ref(db, 'requests/' + reqId));
-        alert(`تم قبول المستخدم ${username} بنجاح.`);
-      } catch (err) {
-        console.error("Error accepting request:", err);
-      }
+      await set(ref(db, 'users/' + reqId), { username, role: 'member', joinedAt: Date.now() });
+      await remove(ref(db, 'requests/' + reqId));
+      alert(`تم قبول المستخدم ${username} بنجاح.`);
     };
 
     window.deleteRequest = async (reqId) => {
-      if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
-        await remove(ref(db, 'requests/' + reqId));
-      }
+      if (confirm("هل أنت متأكد من الرفض؟")) await remove(ref(db, 'requests/' + reqId));
     };
 
-    // --- 3. إدارة المستخدمين والصلاحيات ---
-    const usersList = document.getElementById("usersList");
-
     onValue(ref(db, 'users'), (snapshot) => {
+      const usersList = document.getElementById("usersList");
       usersList.innerHTML = "";
       const data = snapshot.val();
       if (data) {
@@ -376,68 +327,45 @@
           const item = document.createElement("div");
           item.className = "item-card";
           item.innerHTML = `
-            <div>
-              <strong>${user.username || userKey}</strong><br>
-              <span style="font-size: 0.8rem; color: #38bdf8;">الدور: ${user.role || 'عضو'}</span>
-            </div>
+            <div><strong>${user.username || userKey}</strong></div>
             <div class="card-actions">
-              <button class="btn-edit" onclick="openEditPermissions('${userKey}', '${user.username || userKey}')">تعديل الصلاحيات</button>
+              <button class="btn-edit" onclick="openEditPermissions('${userKey}', '${user.username || userKey}')">الصلاحيات</button>
               <button class="btn-delete" onclick="deleteUser('${userKey}')">حذف</button>
             </div>
           `;
           usersList.appendChild(item);
         });
       } else {
-        usersList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا يوجد مستخدمين مسجلين حالياً.</p>`;
+        usersList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا توجد حسابات مسجلة.</p>`;
       }
     });
 
     window.openEditPermissions = function(userKey, username) {
       currentEditingUserKey = userKey;
       document.getElementById('editUsernameTarget').innerText = `المستخدم: ${username}`;
-      
       onValue(ref(db, `users/${userKey}/permissions`), (snapshot) => {
         const perms = snapshot.val() || {};
         document.getElementById('editPermNotifications').checked = !!perms.notifications;
         document.getElementById('editPermManageKeys').checked = !!perms.manageKeys;
         document.getElementById('editPermCreateAccount').checked = !!perms.createAccount;
       }, { onlyOnce: true });
-
       document.getElementById('editPermissionsModal').style.display = 'flex';
     };
 
     window.saveUserPermissions = async function() {
       if (!currentEditingUserKey) return;
-
       const newPerms = {
         notifications: document.getElementById('editPermNotifications').checked,
         manageKeys: document.getElementById('editPermManageKeys').checked,
         createAccount: document.getElementById('editPermCreateAccount').checked
       };
-
-      try {
-        await update(ref(db, `users/${currentEditingUserKey}/permissions`), newPerms);
-        closeModal('editPermissionsModal');
-        alert("تم تحديث الصلاحيات بنجاح!");
-      } catch (err) {
-        console.error("Error updating permissions:", err);
-        alert("حدث خطأ أثناء حفظ الصلاحيات.");
-      }
+      await update(ref(db, `users/${currentEditingUserKey}/permissions`), newPerms);
+      closeModal('editPermissionsModal');
+      alert("تم الحفظ بنجاح!");
     };
 
     window.deleteUser = async (userKey) => {
-      if (confirm("هل أنت متأكد من حذف هذا المستخدم من النظام؟")) {
-        await remove(ref(db, 'users/' + userKey));
-      }
-    };
-
-    document.addEventListener('contextmenu', event => event.preventDefault());
-    document.onkeydown = function(e) {
-      if (e.keyCode == 123 || 
-          (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 67 || e.keyCode == 74)) || 
-          (e.ctrlKey && (e.keyCode == 85 || e.keyCode == 83))) {
-        return false;
-      }
+      if (confirm("هل أنت متأكد من الحذف؟")) await remove(ref(db, 'users/' + userKey));
     };
   </script>
 </body>
