@@ -78,8 +78,11 @@
     .code-badge { background: #0d1117; border: 1px dashed #d4af37; color: #d4af37; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
     .time-badge { background: #1f6feb; color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
 
-    .chat-container { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 24px; max-width: 1000px; width: 100%; margin: 0 auto; }
-    .message { display: flex; gap: 16px; max-width: 88%; }
+    /* توسيع الحواف لتعبئة الشاشة تماماً وعدم الحاجة للتبعيد */
+    .chat-container { 
+      flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; width: 100%; margin: 0 auto; 
+    }
+    .message { display: flex; gap: 16px; width: 100%; }
     .message.user { align-self: flex-end; flex-direction: row-reverse; }
     .message.ai { align-self: flex-start; }
 
@@ -90,7 +93,7 @@
     .msg-content {
       background: #161b22; border: 1px solid #30363d; padding: 18px 22px;
       border-radius: 16px; line-height: 1.7; font-size: 1rem; word-break: break-word; flex: 1;
-      white-space: pre-wrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      white-space: pre-wrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: calc(100% - 54px);
     }
     .message.user .msg-content { background: #1f6feb; border-color: #388bfd; color: #fff; border-bottom-left-radius: 4px; }
     .message.ai .msg-content { border-bottom-right-radius: 4px; }
@@ -110,11 +113,12 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* حزمة الكود مع الالتفاف التلقائي لمنع الخروج عن الحواف */
     .code-block-wrapper {
-      margin-top: 14px; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; background: #0d1117; direction: ltr; text-align: left;
+      margin-top: 14px; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; background: #0d1117; direction: ltr; text-align: left; width: 100%;
     }
     .code-header {
-      background: #21262d; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; font-family: monospace; font-size: 0.85rem; color: #8b949e;
+      background: #21262d; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; font-family: monospace; font-size: 0.85rem; color: #8b949e; flex-wrap: wrap; gap: 8px;
     }
     .code-actions { display: flex; gap: 8px; }
     .code-btn {
@@ -122,8 +126,8 @@
     }
     .code-btn:hover { background: #8b949e; color: #0d1117; }
     
-    pre { margin: 0; max-height: 450px; overflow-y: auto; }
-    pre code { font-family: 'Consolas', 'Monaco', monospace !important; font-size: 0.88rem; padding: 15px !important; display: block; }
+    pre { margin: 0; max-height: 450px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+    pre code { font-family: 'Consolas', 'Monaco', monospace !important; font-size: 0.88rem; padding: 15px !important; display: block; white-space: pre-wrap !important; word-break: break-all !important; }
 
     .download-zip-btn {
       display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; background: #238636;
@@ -185,9 +189,7 @@
       <div style="font-weight: 800; color: #d4af37; font-size: 1.1rem; display:flex; align-items:center; gap:8px;">⚡ سجل المحادثات</div>
       <button class="new-chat-btn" onclick="startNewChat()">➕ محادثة جديدة</button>
     </div>
-    <div class="chats-list" id="chatsListContainer">
-      <!-- Chat history items injected here -->
-    </div>
+    <div class="chats-list" id="chatsListContainer"></div>
   </div>
 
   <div class="app-container">
@@ -196,7 +198,7 @@
         <div class="brand-logo">N</div>
         <div class="brand-title">
           <h3>Nova Ai</h3>
-          <span>متصل (دعم الملفات المتعددة وسجل السحاب)</span>
+          <span>متصل بنظام العرض الشامل</span>
         </div>
       </div>
       <div class="user-info">
@@ -208,7 +210,7 @@
     <div class="chat-container" id="chatContainer">
       <div class="message ai">
         <div class="avatar">AI</div>
-        <div class="msg-content">أهلاً بك يا صديقي في Nova AI. يمكنك رفع عدة صور وملفات دفعة واحدة، وسأقوم بمعالجتها خطوة بخطوة وتوفير ملف ZIP نهائي لك بالأسفل.</div>
+        <div class="msg-content">أهلاً بك يا صديقي في Nova AI. تم تعديل الحواف لتملأ الشاشة بالكامل وتظهر الأكواد بدون إزاحة، وإصلاح مشكلة تحميل ملفات الـ ZIP تماماً!</div>
       </div>
     </div>
 
@@ -251,16 +253,14 @@
     let currentChatId = 'chat_' + Date.now();
     let allChats = JSON.parse(localStorage.getItem('nova_chats') || '{}');
     if (!allChats[currentChatId]) {
-      allChats[currentChatId] = { title: 'محادثة جديدة', history: [{ role: "system", content: "You are Nova AI, an expert programming assistant. STRICT RULES: 1) ALWAYS reply to the user in fluent, natural Arabic for all explanations, analysis, and text. 2) Keep all programming code blocks, SQL queries, Lua scripts, JSON, JavaScript, functions, variables, and technical syntax strictly in their original English format (never translate code or code syntax). 3) Always provide clean code blocks when generating code so the user can easily copy or download the files." }] };
+      allChats[currentChatId] = { title: 'محادثة جديدة', history: [{ role: "system", content: "You are Nova AI, an expert programming assistant. STRICT RULES: 1) ALWAYS reply to the user in fluent, natural Arabic for all explanations, analysis, and text. 2) Keep all programming code blocks, SQL queries, Lua scripts, JSON, JavaScript, functions, variables, and technical syntax strictly in their original English format. 3) Always provide clean code blocks when generating code so the user can easily copy or download the files." }] };
     }
 
-    let selectedFiles = []; // Array to store multiple selected files objects
+    let selectedFiles = [];
 
     window.onload = function() {
       const activeCode = localStorage.getItem('nova_user_code');
-      if (activeCode) {
-        checkCodeStatus(activeCode, true);
-      }
+      if (activeCode) checkCodeStatus(activeCode, true);
       renderChatsSidebar();
       loadActiveChatMessages();
     };
@@ -275,22 +275,18 @@
       try {
         const keyRef = ref(db, 'keys/' + code);
         const snapshot = await get(keyRef);
-
         if (!snapshot.exists()) {
           showToast('الكود المدخل غير صحيح!');
           if (isAutoLogin) logout();
           return;
         }
-
         const foundData = snapshot.val();
         const now = Date.now();
-
         if (foundData.expireAt && now > foundData.expireAt) {
           showToast('عفواً، انتهت صلاحية هذا الكود!');
           if (isAutoLogin) logout();
           return;
         }
-
         const diffMs = foundData.expireAt ? (foundData.expireAt - now) : (30 * 24 * 60 * 60 * 1000);
         const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
         const daysLeft = Math.floor(hoursLeft / 24);
@@ -318,7 +314,6 @@
       setTimeout(() => t.className = '', 3000);
     }
 
-    // Multiple Files Management
     window.handleFilesSelect = function(event) {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -376,12 +371,11 @@
       }
     }
 
-    // Sidebar Chat Management
     window.startNewChat = function() {
       currentChatId = 'chat_' + Date.now();
       allChats[currentChatId] = {
         title: 'محادثة جديدة',
-        history: [{ role: "system", content: "You are Nova AI, an expert programming assistant. STRICT RULES: 1) ALWAYS reply to the user in fluent, natural Arabic for all explanations, analysis, and text. 2) Keep all programming code blocks, SQL queries, Lua scripts, JSON, JavaScript, functions, variables, and technical syntax strictly in their original English format (never translate code or code syntax). 3) Always provide clean code blocks when generating code so the user can easily copy or download the files." }]
+        history: [{ role: "system", content: "You are Nova AI, an expert programming assistant. STRICT RULES: 1) ALWAYS reply to the user in fluent, natural Arabic for all explanations, analysis, and text. 2) Keep all programming code blocks, SQL queries, Lua scripts, JSON, JavaScript, functions, variables, and technical syntax strictly in their original English format. 3) Always provide clean code blocks when generating code so the user can easily copy or download the files." }]
       };
       saveChatsToStorage();
       renderChatsSidebar();
@@ -415,7 +409,7 @@
         container.innerHTML = `
           <div class="message ai">
             <div class="avatar">AI</div>
-            <div class="msg-content">أهلاً بك يا صديقي في Nova AI. يمكنك رفع عدة صور وملفات دفعة واحدة، وسأقوم بمعالجتها خطوة بخطوة وتوفير ملف ZIP نهائي لك بالأسفل.</div>
+            <div class="msg-content">أهلاً بك يا صديقي في Nova AI. تم تعديل الحواف لتملأ الشاشة بالكامل، وإصلاح مشكلة تحميل الـ ZIP تماماً.</div>
           </div>`;
         return;
       }
@@ -426,13 +420,13 @@
           let mediaHtml = '';
           if (Array.isArray(msg.content)) {
             msg.content.forEach(item => {
-              if (item.type === 'text') textDisplay += item.text + ' ';
+              if (item.type === 'text' && !item.text.startsWith('[File Content')) textDisplay += item.text + ' ';
               if (item.type === 'image_url') mediaHtml += `<img src="${item.image_url.url}" class="msg-image">`;
             });
           } else {
             textDisplay = msg.content;
           }
-          let fullHtml = (mediaHtml ? `<div class="media-preview-container">${mediaHtml}</div>` : '') + `<div>${escapeHtml(textDisplay)}</div>`;
+          let fullHtml = (mediaHtml ? `<div class="media-preview-container">${mediaHtml}</div>` : '') + (textDisplay ? `<div>${escapeHtml(textDisplay)}</div>` : '');
           addMessageCustomRaw(fullHtml, 'user');
         } else if (msg.role === 'assistant') {
           addMessageSmartRaw(msg.content, 'ai');
@@ -470,7 +464,6 @@
       let displayHtml = (mediaDisplayHtml ? `<div class="media-preview-container">${mediaDisplayHtml}</div>` : '') + (text ? `<div>${escapeHtml(text)}</div>` : '');
       addMessageCustomRaw(displayHtml, 'user');
 
-      // Update chat title if first user message
       if (allChats[currentChatId].history.length === 1 && text) {
         allChats[currentChatId].title = text.substring(0, 25) + (text.length > 25 ? '...' : '');
         renderChatsSidebar();
@@ -484,17 +477,16 @@
       selectedFiles = [];
       updatePreviewBar();
 
-      // Cloud Style Dynamic Steps Container
       const processingMsgId = addCloudStepsMessage([
-        { text: "جارِ قراءة المحتوى والملفات المرفقة...", active: true, success: false },
-        { text: "فحص الأخطاء البرمجية والتحليل...", active: false, success: false },
-        { text: "جارِ تعديل الأسطر البرمجية بدقة...", active: false, success: false }
+        { text: "جارِ قراءة النصوص والملفات المرفقة...", active: true, success: false },
+        { text: "فحص وتصحيح الأخطاء البرمجية...", active: false, success: false },
+        { text: "جارٍ تطبيق التعديلات الكلية...", active: false, success: false }
       ]);
 
-      setTimeout(() => updateCloudStep(processingMsgId, 1), 1500);
+      setTimeout(() => updateCloudStep(processingMsgId, 1), 1200);
 
       try {
-        const selectedModel = hasImages ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
+        const selectedModel = hasImages ? "qwen/qwen3.6-27b" : "llama-3.3-70b-versatile";
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
@@ -547,7 +539,7 @@
         <div class="avatar">AI</div>
         <div class="msg-content">
           <div class="cloud-steps" id="${msgId}-steps">${stepsHtml}</div>
-          <div>جاري إتمام المعالجة البرمجية...</div>
+          <div>جاري معالجة الكود وتجهيز الملفات...</div>
         </div>`;
       container.appendChild(msgDiv);
       container.scrollTop = container.scrollHeight;
@@ -565,12 +557,12 @@
         stepEl.className = 'cloud-step-item active';
         stepEl.querySelector('span').innerText = '⚙️';
         if (stepIndex === 1) {
-          setTimeout(() => updateCloudStep(msgId, 2), 1500);
+          setTimeout(() => updateCloudStep(msgId, 2), 1200);
         } else if (stepIndex === 2) {
           setTimeout(() => {
             stepEl.className = 'cloud-step-item success';
             stepEl.querySelector('span').innerText = '✅';
-          }, 1500);
+          }, 1200);
         }
       }
     }
@@ -698,6 +690,8 @@
       zip.generateAsync({ type: "blob" }).then(function(content) {
         saveAs(content, `nova_project.zip`);
         showToast('تم تحميل حزمة ZIP بنجاح! 📦');
+      }).catch(err => {
+        showToast('حدث خطأ أثناء إنشاء ملف الـ ZIP');
       });
     }
   </script>
