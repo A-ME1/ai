@@ -240,7 +240,7 @@
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('activeCodeBadge').innerText = code;
         document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
-        document.getElementById('welcomeMsg').innerText = `أهلاً بك 👋 اشتراكك مفعل وساري المفعول لمدة (${timeLeftStr}). يمكنك إرفاق الملفات والصور وطرح طلباتك البرمجية بحرية.`;
+        document.getElementById('welcomeMsg').innerText = `اهلا بك في Nova Ai نقدر نسلعدك و كل شيء`;
 
       } catch (err) {
         console.error(err);
@@ -326,7 +326,7 @@
       attachedFileName = "";
 
       conversationHistory.push({ role: "user", content: apiUserContent });
-      const typingId = addMessage('جاري التفكير ومعالجة الطلب...', 'ai');
+      const typingId = addMessage('جاري المراجعة ....!', 'ai');
 
       try {
         // استخدام Llama 3.2 90b Vision إذا كانت مرفقة صورة، أو النموذج العادي للنصوص والسكربتات
@@ -396,8 +396,8 @@
               <div class="code-header">
                 <span>${validLang.toUpperCase()}</span>
                 <div class="code-actions">
-                  <button class="code-btn" onclick="copyCode('${codeId}')">📋 نسخ الكود</button>
-                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">💾 تنزيل</button>
+                  <button class="code-btn" onclick="copyCode('${codeId}')">نسخ الكود</button>
+                  <button class="code-btn" onclick="downloadSingleFile('${codeId}', '${validLang}')">تنزيل</button>
                 </div>
               </div>
               <pre><code class="language-${validLang}">${escapeHtml(code.trim())}</code></pre>
