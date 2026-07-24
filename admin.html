@@ -68,16 +68,16 @@
     .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 10px; background: #12161f; border: 1px solid #2a3447; border-radius: 6px; color: #fff; outline: none; }
     .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: #d4af37; }
     
-    /* تخصيص صندوق الكتابة المتعدد الأسطر لمنع التعليق وتنظيم المساحة */
     .input-group textarea {
       resize: vertical;
-      min-height: 120px;
+      min-height: 100px;
       line-height: 1.6;
       font-size: 1rem;
     }
     
-    .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; font-family: 'Cairo', sans-serif; transition: 0.2s; width: 100%; }
+    .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; background: #d4af37; color: #12161f; font-family: 'Cairo', sans-serif; transition: 0.2s; width: 100%; margin-top: 5px; }
     .btn:hover { opacity: 0.9; }
+    .btn-secondary { background: #3b82f6; color: #fff; }
 
     /* القوائم والبطاقات */
     .list-container { margin-top: 15px; max-height: 400px; overflow-y: auto; padding-left: 5px; }
@@ -128,11 +128,28 @@
     <!-- 2. واجهة إدارة الأكواد -->
     <div class="card-box view-container" id="keysView">
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">إدارة الأكواد</h2>
+      
+      <!-- أدوات توليد كود عشوائي وتحديد المدة -->
+      <div style="background: #12161f; padding: 15px; border-radius: 8px; border: 1px solid #2a3447; margin-bottom: 20px;">
+        <h3 style="color: #38bdf8; font-size: 1rem; margin-bottom: 10px; text-align: right;">توليد كود عشوائي سريعة</h3>
+        <div class="input-group">
+          <label>مدة صلاحية الكود (بالأيام):</label>
+          <input type="number" id="keyDurationDays" value="30" min="1" placeholder="عدد الأيام...">
+        </div>
+        <button class="btn btn-secondary" id="generateRandomKeyBtn">🎲 توليد كود عشوائي ووضعه في القائمة</button>
+      </div>
+
       <div class="input-group">
         <label>إضافة أكواد متعددة (كل كود في سطر مستقل):</label>
-        <textarea id="newKeyInput" placeholder="اكتب أو الصق الأكواد هنا...&#10;كود_1&#10;كود_2&#10;كود_3"></textarea>
+        <textarea id="newKeyInput" placeholder="اكتب أو الصق الأكواد هنا...&#10;كود_1&#10;كود_2"></textarea>
       </div>
-      <button class="btn" id="addKeyBtn">إضافة الأكواد دفعة واحدة</button>
+      
+      <div class="input-group">
+        <label>مدة الصلاحية العامة للأكواد المكتوبة أعلاه (بالأيام):</label>
+        <input type="number" id="manualDurationDays" value="30" min="1">
+      </div>
+
+      <button class="btn" id="addKeyBtn">إضافة الأكواد لقاعدة البيانات</button>
       
       <div class="list-container" id="keysList">
         <!-- الأكواد سيتم تحميلها هنا -->
@@ -167,8 +184,8 @@
         <label><input type="checkbox" id="editPermCreateAccount"> صلاحية إنشاء حسابات جديدة</label>
       </div>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="btn" style="background:#22c55e; color:#fff;" onclick="saveUserPermissions()">حفظ التعديلات ✓</button>
-        <button class="btn" style="background:#ef4444; color:#fff;" onclick="closeModal('editPermissionsModal')">إلغاء ✕</button>
+        <button class="btn" style="background:#22c55e; color:#fff; margin-top:0;" onclick="saveUserPermissions()">حفظ التعديلات ✓</button>
+        <button class="btn" style="background:#ef4444; color:#fff; margin-top:0;" onclick="closeModal('editPermissionsModal')">إلغاء ✕</button>
       </div>
     </div>
   </div>
@@ -207,29 +224,59 @@
       window.location.reload();
     };
 
-    // --- 1. إدارة الأكواد (يدعم إدخال عدة أسطر دفعة واحدة بدون تعليق) ---
+    // دالة لتوليد كود عشوائي فريد
+    function generateRandomString(length = 10) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = 'NOVA-';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // زر توليد كود عشوائي وإضافته مباشرة لصندوق النصوص
+    document.getElementById("generateRandomKeyBtn").addEventListener("click", () => {
+      const randomCode = generateRandomString(8);
+      const newKeyInput = document.getElementById("newKeyInput");
+      if (newKeyInput.value.trim() !== "") {
+        newKeyInput.value += "\n" + randomCode;
+      } else {
+        newKeyInput.value = randomCode;
+      }
+    });
+
+    // --- 1. إدارة الأكواد والمدة ---
     const addKeyBtn = document.getElementById("addKeyBtn");
     const newKeyInput = document.getElementById("newKeyInput");
     const keysList = document.getElementById("keysList");
 
     addKeyBtn.addEventListener("click", async () => {
       const textContent = newKeyInput.value.trim();
-      if (!textContent) return alert("يرجى إدخال كود واحد على الأقل!");
+      const durationDays = parseInt(document.getElementById("manualDurationDays").value) || 30;
+      
+      if (!textContent) return alert("يرجى إدخال كود واحد على الأقل أو توليد كود عشوائي!");
 
-      // تقسيم النصوص على حسب الأسطر الجديدة لكي تدعم الإدخال الطويل وتحت بعضه
       const lines = textContent.split('\n');
       let addedCount = 0;
+      
+      // حساب تاريخ انتهاء الصلاحية بالميللي ثانية
+      const expireAt = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
 
       try {
         for (let line of lines) {
           const cleanKey = line.trim();
           if (cleanKey) {
-            await set(ref(db, 'keys/' + cleanKey), { active: true, createdAt: Date.now() });
+            await set(ref(db, 'keys/' + cleanKey), { 
+              active: true, 
+              createdAt: Date.now(),
+              durationDays: durationDays,
+              expireAt: expireAt
+            });
             addedCount++;
           }
         }
         newKeyInput.value = "";
-        alert(`تم إضافة ${addedCount} كود بنجاح!`);
+        alert(`تم إضافة ${addedCount} كود بنجاح لمدة ${durationDays} يوم!`);
       } catch (err) {
         console.error("Error adding keys:", err);
         alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
@@ -241,12 +288,17 @@
       const data = snapshot.val();
       if (data) {
         Object.keys(data).forEach(key => {
+          const keyData = data[key];
+          const daysLeft = keyData.expireAt ? Math.ceil((keyData.expireAt - Date.now()) / (1000 * 60 * 60 * 24)) : 'غير محدد';
+          
           const item = document.createElement("div");
           item.className = "item-card";
           item.innerHTML = `
-            <div><strong>الكود:</strong> ${key}</div>
+            <div>
+              <strong>الكود:</strong> ${key}<br>
+              <span style="font-size: 0.8rem; color: #38bdf8;">الصلاحية الباقية: ${daysLeft > 0 ? daysLeft + ' يوم' : 'منتهي الصلاحية'}</span>
+            </div>
             <div class="card-actions">
-              <span class="permissions-badge">نشط</span>
               <button class="btn-delete" onclick="deleteKey('${key}')">حذف</button>
             </div>
           `;
@@ -342,7 +394,7 @@
 
     window.openEditPermissions = function(userKey, username) {
       currentEditingUserKey = userKey;
-      document.getElementById('editUsernameTarget', username).innerText = `المستخدم: ${username}`;
+      document.getElementById('editUsernameTarget').innerText = `المستخدم: ${username}`;
       
       onValue(ref(db, `users/${userKey}/permissions`), (snapshot) => {
         const perms = snapshot.val() || {};
