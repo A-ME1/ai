@@ -3,145 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>بوابة المشتركين - Nova State</title>
+  <title>Nova AI - مساعدك الذكي للسكريبتات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --accent-color: #38bdf8;
-      --accent-hover: #0284c7;
-      --text-color: #f8fafc;
-      --text-secondary: #94a3b8;
-      --border-color: #334155;
-      --danger-color: #f87171;
-      --success-color: #4ade80;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body { background-color: #0b0f17; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* --- 1. شاشة الدخول بالكود --- */
+    #authOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(11, 15, 23, 0.95);
+      backdrop-filter: blur(12px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; padding: 20px;
     }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+    .auth-box {
+      background: #161f2e; border: 1px solid #2a384e; padding: 40px; border-radius: 20px;
+      width: 100%; max-width: 420px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
     }
-
-    .container {
-      width: 100%;
-      max-width: 450px;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    .auth-box h2 { color: #d4af37; margin-bottom: 10px; font-weight: 800; font-size: 1.8rem; }
+    .auth-box p { color: #94a3b8; font-size: 0.95rem; margin-bottom: 25px; }
+    .auth-box input {
+      width: 100%; padding: 14px; background: #0b0f17; border: 1px solid #2a384e;
+      border-radius: 10px; color: #fff; font-size: 1.1rem; text-align: center;
+      outline: none; transition: 0.3s; margin-bottom: 20px; font-weight: 700; letter-spacing: 2px;
     }
-
-    h2 {
-      color: var(--accent-color);
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 22px;
+    .auth-box input:focus { border-color: #d4af37; box-shadow: 0 0 12px rgba(212, 175, 55, 0.3); }
+    .auth-box button {
+      width: 100%; padding: 14px; background: linear-gradient(135deg, #d4af37, #f39c12);
+      border: none; border-radius: 10px; color: #0b0f17; font-weight: 800;
+      font-size: 1.1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
     }
+    .auth-box button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
 
-    .input-group {
-      margin-bottom: 15px;
-      text-align: right;
+    /* --- 2. الهيدر (الشريط العلوي) --- */
+    .chat-header {
+      background: #161f2e; border-bottom: 1px solid #2a384e; padding: 15px 30px;
+      display: flex; justify-content: space-between; align-items: center;
     }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { width: 40px; height: 40px; background: #d4af37; border-radius: 10px; display: flex; justify-content: center; align-items: center; color: #0b0f17; font-weight: 900; font-size: 1.3rem; }
+    .brand-title h3 { color: #fff; font-size: 1.1rem; }
+    .brand-title span { color: #22c55e; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .brand-title span::before { content: ''; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: var(--text-secondary);
-    }
+    .user-info { display: flex; align-items: center; gap: 15px; }
+    .code-badge { background: #0b0f17; border: 1px dashed #d4af37; color: #d4af37; padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; }
+    .logout-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .logout-btn:hover { background: #ef4444; color: #fff; }
 
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.3s;
-    }
+    /* --- 3. منطقة الشات --- */
+    .chat-container { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
+    .message { display: flex; gap: 12px; max-width: 80%; }
+    .message.user { margin-self: flex-end; margin-left: auto; flex-direction: row-reverse; }
+    .message.ai { margin-self: flex-start; margin-right: auto; }
 
-    input:focus, textarea:focus {
-      border-color: var(--accent-color);
-    }
+    .avatar { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+    .message.user .avatar { background: #3b82f6; color: #fff; }
+    .message.ai .avatar { background: #d4af37; color: #0b0f17; }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: var(--accent-hover);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin-top: 10px;
-    }
+    .msg-content { background: #161f2e; border: 1px solid #2a384e; padding: 14px 18px; border-radius: 14px; line-height: 1.6; font-size: 0.98rem; }
+    .message.user .msg-content { background: #1d4ed8; border-color: #2563eb; color: #fff; border-bottom-left-radius: 2px; }
+    .message.ai .msg-content { border-bottom-right-radius: 2px; }
 
-    button:hover {
-      background-color: #0369a1;
-    }
+    /* أكواد البرمجة في الشات */
+    pre { background: #0b0f17; border: 1px solid #2a384e; border-radius: 8px; padding: 12px; margin-top: 10px; overflow-x: auto; font-family: monospace; color: #86efac; direction: ltr; text-align: left; }
 
-    .status-msg {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 14px;
-      min-height: 20px;
-    }
+    /* --- 4. شريط الإدخال والأزرار السريعة --- */
+    .input-wrapper { background: #161f2e; border-top: 1px solid #2a384e; padding: 20px 30px; }
+    .quick-actions { display: flex; gap: 10px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; }
+    .action-chip { background: #0b0f17; border: 1px solid #2a384e; color: #cbd5e1; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .action-chip:hover { border-color: #d4af37; color: #d4af37; }
 
-    .error { color: var(--danger-color); }
-    .success { color: var(--success-color); }
+    .chat-input-box { display: flex; gap: 12px; }
+    .chat-input-box input { flex: 1; background: #0b0f17; border: 1px solid #2a384e; border-radius: 12px; padding: 14px 20px; color: #fff; outline: none; font-size: 1rem; transition: 0.3s; }
+    .chat-input-box input:focus { border-color: #d4af37; }
+    .send-btn { background: #d4af37; border: none; border-radius: 12px; padding: 0 25px; color: #0b0f17; font-weight: 800; cursor: pointer; transition: 0.2s; }
+    .send-btn:hover { background: #e5be40; }
 
-    .hidden {
-      display: none !important;
-    }
+    #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #fff; padding: 12px 25px; border-radius: 10px; font-weight: 700; transition: 0.3s; z-index: 2000; }
+    #toast.show { bottom: 30px; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>تسجيل دخول المشتركين</h2>
-    <form id="loginForm">
-      <div class="input-group">
-        <label for="userKey">كود الاشتراك الخاص بك:</label>
-        <input type="text" id="userKey" placeholder="أدخل كود الاشتراك" required autocomplete="off">
-      </div>
-      <button type="submit" id="loginBtn">دخول</button>
-    </form>
-    <div id="statusMsg" class="status-msg"></div>
-
-    <div id="aiDashboard" class="hidden" style="margin-top: 20px;">
-      <hr style="border-color: var(--border-color); margin: 20px 0;">
-      <h2>مساعد الذكاء الاصطناعي</h2>
-      <div class="input-group">
-        <label for="aiPrompt">اسأل المساعد الذكي:</label>
-        <textarea id="aiPrompt" rows="3" placeholder="اكتب سؤالك هنا..."></textarea>
-      </div>
-      <button id="sendAiBtn">إرسال الطلب</button>
-      <div id="aiResponse" style="margin-top: 15px; background: var(--bg-color); padding: 10px; border-radius: 8px; font-size: 14px; white-space: pre-wrap;"></div>
+  <!-- 1. شاشة الدخول بالكود (تختفي فور الدخول) -->
+  <div id="authOverlay">
+    <div class="auth-box">
+      <h2>Nova AI Chat</h2>
+      <p>أدخل كود الاشتراك الخاص بك للبدء</p>
+      <input type="text" id="accessCodeInput" placeholder="NOVA-XXXXX" autocomplete="off">
+      <button onclick="loginWithCode()">دخول إلى الشات 🚀</button>
     </div>
   </div>
 
+  <!-- 2. الهيدر العلوي -->
+  <div class="chat-header">
+    <div class="brand">
+      <div class="brand-logo">N</div>
+      <div class="brand-title">
+        <h3>مساعد Nova الذكي</h3>
+        <span>متصل وجاهز للعمل</span>
+      </div>
+    </div>
+    <div class="user-info">
+      <span class="code-badge" id="activeCodeBadge">NOVA-XXXXX</span>
+      <button class="logout-btn" onclick="logout()">خروج</button>
+    </div>
+  </div>
+
+  <!-- 3. منطقة المحادثة -->
+  <div class="chat-container" id="chatContainer">
+    <div class="message ai">
+      <div class="avatar">AI</div>
+      <div class="msg-content">
+        أهلاً بك! 👋 أنا مساعدك الذكي الخاص بالسكريبتات والبرمجة. 
+        <br>كيف يمكنني مساعدتك اليوم؟ يمكنك كتابة فكرتك وسأقوم بكتابة السكريبت بالكامل لك!
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. شريط الإدخال والأزرار السريعة -->
+  <div class="input-wrapper">
+    <div class="quick-actions">
+      <div class="action-chip" onclick="quickPrompt('برمج لي سكريبت بوت بسيط بـ Python')">🤖 سكريبت بوت Python</div>
+      <div class="action-chip" onclick="quickPrompt('أريد كود HTML/CSS لصفحة هبوط احترافية')">🌐 صفحة هبوط HTML</div>
+      <div class="action-chip" onclick="quickPrompt('صمم لي دالة JavaScript لحساب الأرقام')">⚡ دالة JavaScript</div>
+      <div class="action-chip" onclick="quickPrompt('كيف يمكنني تحسين أداء هذا الكود؟')">🚀 تحسين أداء الكود</div>
+    </div>
+    <div class="chat-input-box">
+      <input type="text" id="userInput" placeholder="اكتب طلبك أو السكريبت الذي تريده هنا..." onkeypress="handleKeyPress(event)">
+      <button class="send-btn" onclick="sendMessage()">إرسال 🚀</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB165FX1UTITowtK-il9rzIL_LwzfQwkpI",
@@ -150,69 +150,171 @@
       projectId: "nova-state",
       storageBucket: "nova-state.firebasestorage.app",
       messagingSenderId: "478766533943",
-      appId: "1:478766533943:web:6ce4d7cd0b1a58d72c1eb2",
-      measurementId: "G-LMCRPZT1DV"
+      appId: "1:478766533943:web:6ce4d7cd0b1a58d72c1eb2"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const db = getDatabase(app);
 
-    const loginForm = document.getElementById("loginForm");
-    const statusMsg = document.getElementById("statusMsg");
-    const aiDashboard = document.getElementById("aiDashboard");
-
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const keyInput = document.getElementById("userKey").value.trim();
-      
-      statusMsg.className = "status-msg";
-      statusMsg.textContent = "جاري التحقق من الكود...";
-
-      if (!keyInput) {
-        statusMsg.className = "status-msg error";
-        statusMsg.textContent = "يرجى كتابة كود الاشتراك!";
-        return;
+    // التحقق التلقائي عند فتح الصفحة
+    window.onload = function() {
+      const savedCode = localStorage.getItem('active_client_code');
+      if (savedCode) {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('activeCodeBadge').innerText = savedCode;
       }
+    };
+
+    // تسجيل الدخول بالكود
+    window.loginWithCode = async function() {
+      const code = document.getElementById('accessCodeInput').value.trim();
+      if (!code) return showToast('يرجى إدخال كود التفعيل!');
 
       try {
-        const snapshot = await get(ref(db, 'keys/' + keyInput));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          if (data.active) {
-            statusMsg.className = "status-msg success";
-            statusMsg.textContent = "تم تسجيل الدخول بنجاح!";
-            aiDashboard.classList.remove("hidden");
-          } else {
-            statusMsg.className = "status-msg error";
-            statusMsg.textContent = "هذا الكود معطل أو منتهي الصلاحية.";
-            aiDashboard.classList.add("hidden");
-          }
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, 'keys/' + code));
+
+        if (snapshot.exists() && snapshot.val().active) {
+          localStorage.setItem('active_client_code', code);
+          document.getElementById('activeCodeBadge').innerText = code;
+          document.getElementById('authOverlay').style.display = 'none';
         } else {
-          statusMsg.className = "status-msg error";
-          statusMsg.textContent = "الكود الذي أدخلته غير موجود!";
-          aiDashboard.classList.add("hidden");
+          showToast('الكود غير صحيح أو انتهت صلاحيته!');
         }
       } catch (err) {
-        console.error("Firebase Auth Error:", err);
-        statusMsg.className = "status-msg error";
-        statusMsg.textContent = "حدث خطأ أثناء الاتصال بالقاعدة.";
+        showToast('خطأ في الاتصال: ' + err.message);
       }
-    });
+    };
 
-    const sendAiBtn = document.getElementById("sendAiBtn");
-    const aiPrompt = document.getElementById("aiPrompt");
-    const aiResponse = document.getElementById("aiResponse");
+    // تسجيل الخروج
+    window.logout = function() {
+      localStorage.removeItem('active_client_code');
+      location.reload();
+    };
 
-    sendAiBtn.addEventListener("click", () => {
-      const prompt = aiPrompt.value.trim();
-      if (!prompt) return alert("اكتب سؤالاً أولاً!");
-      
-      aiResponse.textContent = "جاري المعالجة...";
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'show';
+      setTimeout(() => t.className = '', 3000);
+    }
+
+    // إرسال الرسائل وتوليد الردود (الذكاء الاصطناعي)
+    window.sendMessage = async function() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // إضافة رسالة المستخدم
+      addMessage(text, 'user');
+      input.value = '';
+
+      // مؤشر الكتابة
+      const typingId = addMessage('جاري كتابة السكريبت والرد...', 'ai');
+
+      // محاكاة استجابة الذكاء الاصطناعي للسكريبتات
       setTimeout(() => {
-        aiResponse.textContent = "تم استلام سؤالك: (" + prompt + ")\nهذه استجابة تجريبية ناتجة من النظام المفعل بنجاح!";
-      }, 1000);
-    });
+        removeMessage(typingId);
+        let aiResponse = generateAIResponse(text);
+        addMessage(aiResponse, 'ai');
+      }, 1200);
+    };
+
+    window.quickPrompt = function(promptText) {
+      document.getElementById('userInput').value = promptText;
+      sendMessage();
+    };
+
+    window.handleKeyPress = function(e) {
+      if (e.key === 'Enter') sendMessage();
+    };
+
+    function addMessage(text, sender) {
+      const container = document.getElementById('chatContainer');
+      const msgDiv = document.createElement('div');
+      const id = 'msg-' + Date.now();
+      msgDiv.id = id;
+      msgDiv.className = `message ${sender}`;
+
+      const avatar = sender === 'user' ? 'أنت' : 'AI';
+      
+      // تنسيق الأكواد إن وجدت
+      let formattedText = text.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
+      formattedText = formattedText.replace(/\n/g, '<br>');
+
+      msgDiv.innerHTML = `
+        <div class="avatar">${avatar}</div>
+        <div class="msg-content">${formattedText}</div>
+      `;
+
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+      return id;
+    }
+
+    function removeMessage(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    // محرك الردود والسكريبتات الذكي
+    function generateAIResponse(query) {
+      if (query.includes('Python') || query.includes('باثون') || query.includes('بوت')) {
+        return `إليك سكريبت جاهز بـ Python كما طلبت:
+
+\`\`\`python
+import time
+
+def main():
+    print("تم تشغيل السكريبت بنجاح! 🚀")
+    for i in range(1, 6):
+        print(f"جاري معالجة البيانات... Step {i}")
+        time.sleep(0.5)
+    print("تمت المهمة بنجاح!")
+
+if __name__ == "__main__":
+    main()
+\`\`\`
+يمكنك نسخ الكود وتشغيله فوراً على جهازك! هل تحتاج لإضافة مميزات أخرى؟`;
+      } else if (query.includes('HTML') || query.includes('صفحة')) {
+        return `إليك كود واجهة HTML مع تنسيق CSS أنيق:
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <style>
+    body { background: #12161f; color: #fff; font-family: sans-serif; text-align: center; padding: 50px; }
+    .card { background: #1a2230; padding: 30px; border-radius: 12px; display: inline-block; }
+    h1 { color: #d4af37; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>مرحباً بك في موقعك الجديد</h1>
+    <p>تم تصميم الواجهة بنجاح بواسطة AI</p>
+  </div>
+</body>
+</html>
+\`\`\`
+`;
+      } else {
+        return `بناءً على طلبك: "${query}"
+
+تم تحليل الطلب. إليك سكريبت مخصص للتعامل مع هذا الأمر:
+
+\`\`\`javascript
+// Script Generator System
+function processRequest() {
+  console.log("Processing: " + "${query}");
+  return { status: "Success", timestamp: new Date() };
+}
+
+processRequest();
+\`\`\`
+إذا كنت تريد تخصيص السكريبت للغة برمجة معينة (مثل Python, PHP, C#)، فقط اخبرني بذلك!`;
+      }
+    }
   </script>
 </body>
 </html>
