@@ -78,6 +78,11 @@
 
     .msg-image { max-width: 250px; max-height: 250px; border-radius: 8px; margin-bottom: 10px; display: block; border: 1px solid #30363d; }
 
+    .status-box {
+      background: #161b22; border: 1px dashed #30363d; border-radius: 10px; padding: 10px 15px;
+      margin-bottom: 12px; font-size: 0.88rem; color: #58a6ff; display: flex; align-items: center; gap: 8px;
+    }
+
     .code-block-wrapper {
       margin-top: 12px; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; background: #161b22; direction: ltr; text-align: left;
     }
@@ -157,7 +162,7 @@
     <div class="chat-container" id="chatContainer">
       <div class="message ai">
         <div class="avatar">AI</div>
-        <div class="msg-content" id="welcomeMsg">أهلاً بك يا صديقي في Nova AI. أنا جاهز لمساعدتك في أي وقت، سأقوم بشرح كل شيء لك باللغة العربية الواضحة، بينما ستبقى الأكواد والملفات الإنجليزية على طبيعتها البرمجية تماماً مع توفير خيارات تحميل فورية لها.</div>
+        <div class="msg-content" id="welcomeMsg">أهلاً بك يا صديقي في Nova AI. أنا جاهز لمعالجة النصوص والصور وملفات السكربتات بدقة وعرض تفاصيل ما أقوم به أولاً بأول.</div>
       </div>
     </div>
 
@@ -316,6 +321,7 @@
 
       let displayHtml = text ? escapeHtml(text) : '';
       let apiUserContent = text;
+      let statusInfo = "";
 
       if (attachedFileType === 'image') {
         displayHtml = `<img src="${attachedFileContent}" class="msg-image"><br>` + displayHtml;
@@ -323,9 +329,13 @@
           { type: "text", text: text || "قم بتحليل هذه الصورة واشرحها بالتفصيل باللغة العربية." },
           { type: "image_url", image_url: { url: attachedFileContent } }
         ];
+        statusInfo = `🔍 تم استلام صورة: (${attachedFileName}) جاري فحص محتواها...`;
       } else if (attachedFileType === 'text') {
         apiUserContent = `${text}\n\n[Attached File (${attachedFileName}):\n${attachedFileContent}]`;
         displayHtml += `\n📁 [الملف المرفق: ${attachedFileName}]`;
+        statusInfo = `📂 تم قراءة الملف: (${attachedFileName}) جاري التعديل والمراجعة...`;
+      } else {
+        statusInfo = `💬 جاري معالجة النص وإرسال الطلب...`;
       }
 
       addMessageCustom(displayHtml, 'user');
@@ -336,12 +346,13 @@
       document.getElementById('filePreviewIndicator').style.display = 'none';
       
       const currentFileType = attachedFileType;
+      const currentFileName = attachedFileName;
       attachedFileContent = null;
       attachedFileType = null;
       attachedFileName = "";
 
       conversationHistory.push({ role: "user", content: apiUserContent });
-      const typingId = addMessagePlain('جاري معالجة طلبك...', 'ai');
+      const typingId = addMessageWithStatus(statusInfo, 'جاري توليد الرد النهائي...', 'ai');
 
       try {
         const selectedModel = (currentFileType === 'image') ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
@@ -371,7 +382,9 @@
         if (data.choices && data.choices.length > 0) {
           const aiReply = data.choices[0].message.content;
           conversationHistory.push({ role: "assistant", content: aiReply });
-          addMessageSmart(aiReply, 'ai');
+          
+          let logStatus = currentFileName ? `🎯 تم إتمام العملية على الملف: (${currentFileName})` : `🎯 تم تنفيذ الطلب بنجاح`;
+          addMessageSmart(aiReply, 'ai', logStatus);
         }
       } catch (error) {
         removeMessage(typingId);
@@ -379,13 +392,18 @@
       }
     }
 
-    function addMessagePlain(text, sender) {
+    function addMessageWithStatus(statusText, mainText, sender) {
       const container = document.getElementById('chatContainer');
       const msgDiv = document.createElement('div');
       const msgId = 'msg-' + Date.now();
       msgDiv.id = msgId;
       msgDiv.className = `message ${sender}`;
-      msgDiv.innerHTML = `<div class="avatar">AI</div><div class="msg-content">${escapeHtml(text)}</div>`;
+      msgDiv.innerHTML = `
+        <div class="avatar">AI</div>
+        <div class="msg-content">
+          <div class="status-box">⚙️ ${escapeHtml(statusText)}</div>
+          <div>${escapeHtml(mainText)}</div>
+        </div>`;
       container.appendChild(msgDiv);
       container.scrollTop = container.scrollHeight;
       return msgId;
@@ -404,7 +422,7 @@
       return msgId;
     }
 
-    function addMessageSmart(text, sender) {
+    function addMessageSmart(text, sender, logStatus) {
       const container = document.getElementById('chatContainer');
       const msgDiv = document.createElement('div');
       const msgId = 'msg-' + Date.now();
@@ -441,7 +459,9 @@
         processedText = escapeHtml(text);
       }
 
-      msgDiv.innerHTML = `<div class="avatar">AI</div><div class="msg-content" id="content-${msgId}">${processedText}</div>`;
+      let finalHtml = `<div class="status-box">📌 ${escapeHtml(logStatus)}</div><div>${processedText}</div>`;
+
+      msgDiv.innerHTML = `<div class="avatar">AI</div><div class="msg-content" id="content-${msgId}">${finalHtml}</div>`;
       container.appendChild(msgDiv);
 
       setTimeout(() => {
