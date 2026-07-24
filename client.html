@@ -40,7 +40,6 @@
     }
     .auth-box button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
 
-    /* Sidebar Chat History (Left) */
     .sidebar {
       width: 280px; background: #161b22; border-left: 1px solid #30363d; display: flex;
       flex-direction: column; height: 100vh; flex-shrink: 0; transition: 0.3s;
@@ -59,7 +58,6 @@
     .chat-item:hover { background: #21262d; color: #e6edf3; }
     .chat-item.active { background: #21262d; border-color: #30363d; color: #d4af37; font-weight: 700; }
 
-    /* Main App Container */
     .app-container {
       flex: 1; height: 100vh; display: flex; flex-direction: column; background: #0d1117; overflow: hidden;
     }
@@ -78,7 +76,6 @@
     .code-badge { background: #0d1117; border: 1px dashed #d4af37; color: #d4af37; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
     .time-badge { background: #1f6feb; color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
 
-    /* توسيع الحواف لتعبئة الشاشة تماماً وعدم الحاجة للتبعيد */
     .chat-container { 
       flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; width: 100%; margin: 0 auto; 
     }
@@ -102,18 +99,14 @@
     .msg-image { max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #30363d; object-fit: cover; }
     .msg-file-tag { background: #0d1117; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; color: #58a6ff; display: inline-flex; align-items: center; gap: 6px; }
 
-    /* Cloud Style Step Logs */
     .cloud-steps {
       background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 12px 16px;
       margin-bottom: 14px; font-family: monospace; font-size: 0.88rem; display: flex; flex-direction: column; gap: 6px;
     }
-    .cloud-step-item { display: flex; align-items: center; gap: 8px; color: #8b949e; animation: fadeIn 0.3s ease-in-out; }
+    .cloud-step-item { display: flex; align-items: center; gap: 8px; color: #8b949e; }
     .cloud-step-item.active { color: #58a6ff; font-weight: bold; }
     .cloud-step-item.success { color: #238636; }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* حزمة الكود مع الالتفاف التلقائي لمنع الخروج عن الحواف */
     .code-block-wrapper {
       margin-top: 14px; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; background: #0d1117; direction: ltr; text-align: left; width: 100%;
     }
@@ -136,7 +129,6 @@
     }
     .download-zip-btn:hover { background: #2ea043; transform: translateY(-2px); }
 
-    /* Input Area & Multi-file Previews */
     .input-wrapper { background: #161b22; border-top: 1px solid #30363d; padding: 20px 30px; }
     .attachments-preview-bar {
       display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; max-height: 120px; overflow-y: auto;
@@ -183,7 +175,6 @@
     </div>
   </div>
 
-  <!-- Sidebar Chat History -->
   <div class="sidebar">
     <div class="sidebar-header">
       <div style="font-weight: 800; color: #d4af37; font-size: 1.1rem; display:flex; align-items:center; gap:8px;">⚡ سجل المحادثات</div>
@@ -210,7 +201,7 @@
     <div class="chat-container" id="chatContainer">
       <div class="message ai">
         <div class="avatar">AI</div>
-        <div class="msg-content">أهلاً بك يا صديقي في Nova AI. تم تعديل الحواف لتملأ الشاشة بالكامل وتظهر الأكواد بدون إزاحة، وإصلاح مشكلة تحميل ملفات الـ ZIP تماماً!</div>
+        <div class="msg-content">أهلاً بك يا صديقي في Nova AI. تم تعديل نماذج الذكاء الاصطناعي لتجنب مشاكل توقف الصور.</div>
       </div>
     </div>
 
@@ -409,7 +400,7 @@
         container.innerHTML = `
           <div class="message ai">
             <div class="avatar">AI</div>
-            <div class="msg-content">أهلاً بك يا صديقي في Nova AI. تم تعديل الحواف لتملأ الشاشة بالكامل، وإصلاح مشكلة تحميل الـ ZIP تماماً.</div>
+            <div class="msg-content">أهلاً بك يا صديقي في Nova AI. تفضل بطرح أسئلتك أو ارفع صورك وملفاتك هنا.</div>
           </div>`;
         return;
       }
@@ -483,10 +474,11 @@
         { text: "جارٍ تطبيق التعديلات الكلية...", active: false, success: false }
       ]);
 
-      setTimeout(() => updateCloudStep(processingMsgId, 1), 1200);
+      setTimeout(() => updateCloudStep(processingMsgId, 1), 1000);
 
       try {
-        const selectedModel = hasImages ? "qwen/qwen3.6-27b" : "llama-3.3-70b-versatile";
+        // استخدام نموذج لاما القوي للصور والنصوص معاً لضمان الاستجابة
+        const selectedModel = hasImages ? "meta-llama/llama-3.2-11b-vision-instruct" : "llama-3.3-70b-versatile";
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
@@ -502,8 +494,9 @@
         });
 
         if (!response.ok) {
+          const errData = await response.json();
           removeMessage(processingMsgId);
-          showToast(`خطأ في الاستجابة (${response.status})`);
+          showToast(`خطأ من الخادم: ${errData.error?.message || response.status}`);
           return;
         }
 
@@ -515,6 +508,8 @@
           allChats[currentChatId].history.push({ role: "assistant", content: aiReply });
           saveChatsToStorage();
           addMessageSmartRaw(aiReply, 'ai');
+        } else {
+          showToast('لم يتم استقبال رد من النموذج.');
         }
       } catch (error) {
         removeMessage(processingMsgId);
@@ -539,7 +534,7 @@
         <div class="avatar">AI</div>
         <div class="msg-content">
           <div class="cloud-steps" id="${msgId}-steps">${stepsHtml}</div>
-          <div>جاري معالجة الكود وتجهيز الملفات...</div>
+          <div>جاري معالجة الطلب وتجهيز الرد...</div>
         </div>`;
       container.appendChild(msgDiv);
       container.scrollTop = container.scrollHeight;
@@ -557,12 +552,12 @@
         stepEl.className = 'cloud-step-item active';
         stepEl.querySelector('span').innerText = '⚙️';
         if (stepIndex === 1) {
-          setTimeout(() => updateCloudStep(msgId, 2), 1200);
+          setTimeout(() => updateCloudStep(msgId, 2), 1000);
         } else if (stepIndex === 2) {
           setTimeout(() => {
             stepEl.className = 'cloud-step-item success';
             stepEl.querySelector('span').innerText = '✅';
-          }, 1200);
+          }, 1000);
         }
       }
     }
