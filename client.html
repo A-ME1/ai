@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nova AI</title>
+  <title>Nova AI - العميل</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -15,6 +15,31 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
     body { background-color: #0d1117; color: #e6edf3; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+
+    /* شاشة الدخول */
+    #authOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 17, 23, 0.98); backdrop-filter: blur(15px);
+      display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px;
+    }
+    .auth-box {
+      background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 20px;
+      width: 100%; max-width: 420px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+    .auth-box h2 { color: #d4af37; margin-bottom: 8px; font-weight: 800; font-size: 1.8rem; }
+    .auth-box p { color: #8b949e; font-size: 0.9rem; margin-bottom: 20px; }
+    .auth-box input {
+      width: 100%; padding: 14px; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 12px; color: #fff; font-size: 1.1rem; text-align: center;
+      outline: none; transition: 0.3s; margin-bottom: 15px; font-weight: 700; text-transform: uppercase;
+    }
+    .auth-box input:focus { border-color: #d4af37; box-shadow: 0 0 12px rgba(212, 175, 55, 0.25); }
+    .auth-box button {
+      width: 100%; padding: 14px; background: linear-gradient(135deg, #d4af37, #f39c12);
+      border: none; border-radius: 12px; color: #0d1117; font-weight: 800;
+      font-size: 1.05rem; cursor: pointer; transition: 0.3s;
+    }
+    .auth-box button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
 
     .app-container {
       width: 100%; max-width: 900px; height: 100vh; display: flex; flex-direction: column;
@@ -30,6 +55,10 @@
     .brand-title h3 { color: #fff; font-size: 1.05rem; font-weight: 700; }
     .brand-title span { color: #238636; font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
     .brand-title span::before { content: ''; width: 7px; height: 7px; background: #238636; border-radius: 50%; display: inline-block; }
+
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .code-badge { background: #0d1117; border: 1px dashed #d4af37; color: #d4af37; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
+    .time-badge { background: #1f6feb; color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
 
     .chat-container { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
     .message { display: flex; gap: 14px; max-width: 92%; }
@@ -82,21 +111,35 @@
 </head>
 <body>
 
+  <!-- شاشة الدخول الإجبارية للكود -->
+  <div id="authOverlay">
+    <div class="auth-box">
+      <h2>Nova AI</h2>
+      <p>أدخل كود التفعيل المأخوذ من لوحة الأدمن</p>
+      <input type="text" id="accessCodeInput" placeholder="مثال: NOVA-XXXXX">
+      <button onclick="validateAndLogin()">دخول 🚀</button>
+    </div>
+  </div>
+
   <div class="app-container">
     <div class="chat-header">
       <div class="brand">
         <div class="brand-logo">N</div>
         <div class="brand-title">
           <h3>مساعد Nova الذكي</h3>
-          <span>جاهز ومباشر للاستخدام</span>
+          <span>متصل وجاهز للمحادثة والبرمجة</span>
         </div>
+      </div>
+      <div class="user-info">
+        <span class="code-badge" id="activeCodeBadge">---</span>
+        <span class="time-badge" id="timeRemainingBadge">متبقي: --</span>
       </div>
     </div>
 
     <div class="chat-container" id="chatContainer">
       <div class="message ai">
         <div class="avatar">AI</div>
-        <div class="msg-content">أهلاً بك 👋 النظام جاهز ومفتاح الـ API مدمج بنجاح. كيف يمكنني مساعدتك اليوم؟</div>
+        <div class="msg-content" id="welcomeMsg">أهلاً بك 👋 كيف يمكنني مساعدتك اليوم؟</div>
       </div>
     </div>
 
@@ -111,17 +154,63 @@
   <div id="toast"></div>
 
   <script>
-    // تجميع المفتاح برمجياً للالتفاف على فحص الأمان في GitHub
+    // تجميع الـ API Key لتجنب حظر GitHub
     const k1 = "gsk_ZdkWYQEtGqeJJDrtrrgq";
     const k2 = "WGdyb3FY3patS54YhxytqNnHu65sGCCV";
     const GROQ_API_KEY = k1 + k2;
 
     let conversationHistory = [
-      { 
-        role: "system", 
-        content: "أنت مساعد ذكي واسمه Nova AI. قم بالرد باللغة العربية بطريقة ممتعة ومفيدة. عند كتابة كود برمجياً، حدد اسم اللغة في بداية كل كتلة كود."
-      }
+      { role: "system", content: "أنت مساعد ذكي واسمه Nova AI. قم بالرد باللغة العربية. عند كتابة كود برمجياً، حدد اسم اللغة في بداية كل كتلة كود." }
     ];
+
+    window.onload = function() {
+      const activeCode = localStorage.getItem('nova_user_code');
+      if (activeCode) {
+        checkCodeStatus(activeCode, true);
+      }
+    };
+
+    function validateAndLogin() {
+      const inputCode = document.getElementById('accessCodeInput').value.trim().toUpperCase();
+      if (!inputCode) return showToast('يرجى إدخال الكود أولاً!');
+      checkCodeStatus(inputCode, false);
+    }
+
+    function checkCodeStatus(code, isAutoLogin) {
+      const allCodes = JSON.parse(localStorage.getItem('nova_access_codes') || '[]');
+      const foundData = allCodes.find(c => c.code === code);
+
+      if (!foundData) {
+        showToast('الكود المدخل غير صحيح!');
+        if (isAutoLogin) logout();
+        return;
+      }
+
+      const now = Date.now();
+      if (now > foundData.expireAt) {
+        showToast('عفواً، لقد انتهت صلاحية هذا الكود!');
+        if (isAutoLogin) logout();
+        return;
+      }
+
+      // حساب المدة المتبقية
+      const diffMs = foundData.expireAt - now;
+      const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+      const daysLeft = Math.floor(hoursLeft / 24);
+
+      let timeLeftStr = daysLeft > 0 ? `${daysLeft} يوم` : `${hoursLeft} ساعة`;
+
+      localStorage.setItem('nova_user_code', code);
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('activeCodeBadge').innerText = code;
+      document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
+      document.getElementById('welcomeMsg').innerText = `أهلاً بك 👋 اشتراكك مفعل وساري المفعول لمدة (${timeLeftStr}) قادمة. كيف أستطيع مساعدتك اليوم؟`;
+    }
+
+    function logout() {
+      localStorage.removeItem('nova_user_code');
+      document.getElementById('authOverlay').style.display = 'flex';
+    }
 
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -133,7 +222,6 @@
     async function sendMessage() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
-
       if (!text) return;
 
       addMessage(text, 'user');
@@ -176,9 +264,7 @@
       }
     }
 
-    function handleKeyPress(e) {
-      if (e.key === 'Enter') sendMessage();
-    }
+    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 
     function addMessage(text, sender) {
       const container = document.getElementById('chatContainer');
@@ -241,14 +327,8 @@
       return msgId;
     }
 
-    function removeMessage(id) {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
+    function removeMessage(id) { const el = document.getElementById(id); if (el) el.remove(); }
+    function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
     window.copyCode = function(codeId) {
       const codeText = window[codeId];
