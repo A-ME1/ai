@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بوابة العملاء - Client Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h2 { text-align: center; margin-bottom: 20px; color: #38bdf8; }
+    .input-group { margin-bottom: 15px; }
+    .input-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 14px; }
+    .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none; }
+    .btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn:hover { background: #0369a1; }
+    
+    /* AI Interface */
+    .ai-container { background: #1e293b; width: 100%; max-width: 800px; height: 80vh; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; }
+    .ai-header { padding: 15px 20px; background: #0f172a; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+    .msg { max-width: 80%; padding: 12px 16px; border-radius: 10px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+    .msg.user { background: #0284c7; color: #fff; align-self: flex-start; border-bottom-right-radius: 2px; }
+    .msg.ai { background: #334155; color: #f8fafc; align-self: flex-end; border-bottom-left-radius: 2px; border: 1px solid #475569; }
+    .chat-input-zone { padding: 15px; background: #0f172a; display: flex; gap: 10px; border-top: 1px solid #334155; }
+    .chat-input-zone input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #fff; outline: none; }
+    
+    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: none; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+
+  <div id="toast"></div>
+
+  <!-- Code Entry Screen -->
+  <div id="codeAuthCard" class="card">
+    <h2>تفعيل الخدمة</h2>
+    <div class="input-group">
+      <label>أدخل كود الدخول الخاص بك</label>
+      <input type="text" id="accessCode" placeholder="SMART-XXXXXX">
+    </div>
+    <button class="btn" onclick="validateCode()">دخول</button>
+  </div>
+
+  <!-- AI Workspace Screen -->
+  <div id="aiWorkspace" class="ai-container" style="display:none;">
+    <div class="ai-header">
+      <h3 style="color:#38bdf8;">SMART AI (FiveM Specialist)</h3>
+      <span style="font-size: 12px; color: #10b981;">● مفعّل ومتصل</span>
+    </div>
+    <div id="chatBox" class="chat-box">
+      <div class="msg ai">أهلاً بك! أنا SMART AI المساعد المخصص لتطوير وبرمجة سيرفرات FiveM (Lua, ESX, QBCore, NUI). كيف يمكنني مساعدتك اليوم؟</div>
+    </div>
+    <div class="chat-input-zone">
+      <input type="text" id="userInput" placeholder="اسأل عن أكواد Lua، أخطاء السكربتات، أو تجهيز سيرفر FiveM..." onkeydown="if(event.key==='Enter') sendMessage()">
+      <button class="btn" style="width: auto; padding: 0 25px;" onclick="sendMessage()">إرسال</button>
+    </div>
+  </div>
+
+  <!-- Firebase Integration -->
+  <script type="module">
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB165FX1UTITowtK-il9rzIL_LwzfQwkpI",
+  authDomain: "nova-state.firebaseapp.com",
+  databaseURL: "https://nova-state-default-rtdb.firebaseio.com",
+  projectId: "nova-state",
+  storageBucket: "nova-state.firebasestorage.app",
+  messagingSenderId: "478766533943",
+  appId: "1:478766533943:web:6ce4d7cd0b1a58d72c1eb2",
+  measurementId: "G-LMCRPZT1DV"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app); 
+
+    const GROQ_API_KEY = "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";
+    let activeCode = null;
+    let userIP = null;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    // Fetch IP Address
+    async function getClientIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip;
+      } catch (e) {
+        return '127.0.0.1';
+      }
+    }
+
+    window.validateCode = async () => {
+      const code = document.getElementById('accessCode').value.trim();
+      if(!code) return showToast('يرجى إدخال الكود');
+
+      userIP = await getClientIP();
+      const codeRef = ref(db, `codes/${code}`);
+      const snap = await get(codeRef);
+
+      if(!snap.exists()) {
+        return showToast('الكود غير صحيح أو تم إغلاقه');
+      }
+
+      const codeData = snap.val();
+
+      if(codeData.ip && codeData.ip !== userIP) {
+        return showToast('لقد تم تسجيل هذا الكود لجهاز آخر بالفعل!');
+      }
+
+      // Bind IP if first access
+      if(!codeData.ip) {
+        await fetch(`https://nova-state-default-rtdb.firebaseio.com/codes/${code}.json`, {
+          method: 'PATCH',
+          body: JSON.stringify({ ip: userIP })
+        });
+      }
+
+      activeCode = code;
+      startRealtimeCodeListener(code);
+      document.getElementById('codeAuthCard').style.display = 'none';
+      document.getElementById('aiWorkspace').style.display = 'flex';
+    };
+
+    // Instant Termination Listener
+    function startRealtimeCodeListener(code) {
+      onValue(ref(db, `codes/${code}`), (snapshot) => {
+        if(!snapshot.exists()) {
+          showToast('تم حذف كودك من الخدمة');
+          setTimeout(() => location.reload(), 1500);
+        }
+      });
+    }
+
+    // AI Groq Chat Integration
+    window.sendMessage = async () => {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if(!text) return;
+
+      appendMessage(text, 'user');
+      input.value = '';
+
+      const loadingId = appendMessage('جاري التفكير...', 'ai');
+
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${GROQ_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: "أنت SMART AI، خبير ومطور محترف جداً ومختص في برمجة وتطوير سيرفرات FiveM بلغة Lua وتطوير NUI و إطارات العمل مثل ESX و QBCore. أجب دائماً بدقة مع توفير أمثلة كود شغال ومباشر."
+              },
+              { role: "user", content: text }
+            ]
+          })
+        });
+
+        const data = await response.json();
+        const reply = data.choices[0]?.message?.content || 'عذراً، حدث خطأ أثناء معالجة الطلب.';
+        document.getElementById(loadingId).innerText = reply;
+      } catch (err) {
+        document.getElementById(loadingId).innerText = 'خطأ في الاتصال بالسيرفر.';
+      }
+    };
+
+    function appendMessage(text, side) {
+      const box = document.getElementById('chatBox');
+      const msg = document.createElement('div');
+      const id = 'msg-' + Date.now();
+      msg.id = id;
+      msg.className = `msg ${side}`;
+      msg.innerText = text;
+      box.appendChild(msg);
+      box.scrollTop = box.scrollHeight;
+      return id;
+    }
+  </script>
+</body>
+</html>
