@@ -6,7 +6,7 @@
   <title>Nova AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- 1. مكتبة تلوين الأكواد (Highlight.js) بثيم مظلم أنيق -->
+  <!-- 1. مكتبة تلوين الأكواد البرمجية (Highlight.js) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   
@@ -94,7 +94,7 @@
     }
     .download-zip-btn:hover { background: #2ea043; transform: translateY(-2px); }
 
-    /* صندوق الإدخال السفلي (بدون أزرار سريعة) */
+    /* صندوق الإدخال السفلي */
     .input-wrapper { background: #161b22; border-top: 1px solid #30363d; padding: 20px 30px; }
     .chat-input-box { display: flex; gap: 12px; }
     .chat-input-box input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 14px 20px; color: #fff; outline: none; font-size: 1rem; transition: 0.3s; }
@@ -143,7 +143,7 @@
       </div>
     </div>
 
-    <!-- صندوق الإدخال فقط (حُذفت الأزرار) -->
+    <!-- صندوق الإدخال السفلي -->
     <div class="input-wrapper">
       <div class="chat-input-box">
         <input type="text" id="userInput" placeholder="اكتب رسالتك أو طلبك هنا..." onkeypress="handleKeyPress(event)">
@@ -171,13 +171,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const GROQ_API_KEY = "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";
+    // ضع مفتاح Groq الخاص بك هنا (تأكد من عدم رفع مفتاح جديد للعامة على GitHub لمنع حظره)
+    const GROQ_API_KEY = "gsk_ضع_مفتاحك_الجديد_هنا";
 
-    // توجيه ذكي ومرن: سوالف عامة برياحة + برمجة عند الطلب
     let conversationHistory = [
       { 
         role: "system", 
-        content: "أنت مساعد ذكي وصديق برمجيات. تحدث مع المستخدم بعفوية وودية حول أي موضوع يسألك عنه. إذا طلب منك كود برمي أو سكريبت (مثل Lua, HTML, Python, JS...)، قم بكتابة الكود كاملاً داخل كتل الكود المخصصة ```language مع تحديد اسم اللغة دائماً فوق الكود."
+        content: "أنت مساعد ذكي وصديق برمجيات. تحدث مع المستخدم بعفوية وودية حول أي موضوع يسألك عنه. إذا طلب منك كود برمج أو سكريبت (مثل Lua, HTML, Python, JS...)، قم بكتابة الكود كاملاً داخل كتل الكود المخصصة ```language مع تحديد اسم اللغة دائماً فوق الكود."
       }
     ];
 
@@ -246,6 +246,13 @@
           })
         });
 
+        // فحص الاستجابة للتأكد من عدم وجود خطأ 401 أو خطأ في السيرفر
+        if (!response.ok) {
+          removeMessage(typingId);
+          addMessage(`خطأ من السيرفر (${response.status}): يرجى التأكد من صلاحية مفتاح الـ Groq API.`, 'ai');
+          return;
+        }
+
         const data = await response.json();
         removeMessage(typingId);
 
@@ -275,7 +282,7 @@
 
       const avatar = sender === 'user' ? 'أنت' : 'AI';
 
-      // تحويل كتل الأكواد لتكون ملونة بدقة بـ Highlight.js
+      // معالجة كتل الأكواد وتعيين كلاس اللغات للتلوين
       let formattedText = text.replace(/```(\w+)?\n([\s\S]*?)```/g, function(match, lang, code) {
         const validLang = lang ? lang : 'plaintext';
         return `<pre><code class="language-${validLang}">${escapeHtml(code.trim())}</code></pre>`;
@@ -288,12 +295,12 @@
 
       container.appendChild(msgDiv);
 
-      // تلوين الكود تلقائياً
+      // تطبيق التلوين تلقائياً عبر Highlight.js
       msgDiv.querySelectorAll('pre code').forEach((block) => {
         hljs.highlightElement(block);
       });
 
-      // إظهار زر الـ ZIP فقط إذا كانت الرسالة تحتوي على كود برمي
+      // إظهار زر الـ ZIP عند وجود كود برمج في الرد
       if (sender === 'ai' && text.includes('```')) {
         const contentDiv = document.getElementById(`content-${msgId}`);
         const zipBtn = document.createElement('button');
@@ -316,7 +323,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // استخراج وتنزيل الأكواد بصيغة ZIP
+    // استخراج الملفات وضغطها وتنزيلها
     window.downloadCodeAsZip = function(rawText) {
       const zip = new JSZip();
       const codeBlockRegex = /```(?:(\w+)\n)?([\s\S]*?)```/g;
