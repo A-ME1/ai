@@ -3,141 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nova AI - مساعدك الذكي للسكريبتات</title>
+  <title>Nova AI - مساعد السكريبتات</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <!-- مكتبات تحميل وضغط الملفات تلقائياً -->
+  <!-- مكتبات تحميل وضغط الملفات ZIP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-    body { background-color: #0b0f17; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    body { background-color: #0d1117; color: #e6edf3; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
 
-    /* شاشة الدخول بالكود */
+    /* --- شاشة الدخول بالكود --- */
     #authOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 15, 23, 0.95); backdrop-filter: blur(12px);
+      background: rgba(13, 17, 23, 0.96); backdrop-filter: blur(15px);
       display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px;
     }
     .auth-box {
-      background: #161f2e; border: 1px solid #2a384e; padding: 40px; border-radius: 20px;
-      width: 100%; max-width: 420px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 20px;
+      width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
     }
-    .auth-box h2 { color: #d4af37; margin-bottom: 10px; font-weight: 800; font-size: 1.8rem; }
-    .auth-box p { color: #94a3b8; font-size: 0.95rem; margin-bottom: 25px; }
+    .auth-box h2 { color: #d4af37; margin-bottom: 8px; font-weight: 800; font-size: 1.8rem; }
+    .auth-box p { color: #8b949e; font-size: 0.9rem; margin-bottom: 25px; }
     .auth-box input {
-      width: 100%; padding: 14px; background: #0b0f17; border: 1px solid #2a384e;
-      border-radius: 10px; color: #fff; font-size: 1.1rem; text-align: center;
+      width: 100%; padding: 14px; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 12px; color: #fff; font-size: 1.1rem; text-align: center;
       outline: none; transition: 0.3s; margin-bottom: 20px; font-weight: 700; letter-spacing: 2px;
     }
-    .auth-box input:focus { border-color: #d4af37; box-shadow: 0 0 12px rgba(212, 175, 55, 0.3); }
+    .auth-box input:focus { border-color: #d4af37; box-shadow: 0 0 12px rgba(212, 175, 55, 0.25); }
     .auth-box button {
       width: 100%; padding: 14px; background: linear-gradient(135deg, #d4af37, #f39c12);
-      border: none; border-radius: 10px; color: #0b0f17; font-weight: 800;
-      font-size: 1.1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+      border: none; border-radius: 12px; color: #0d1117; font-weight: 800;
+      font-size: 1.05rem; cursor: pointer; transition: 0.3s;
     }
-    .auth-box button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
+    .auth-box button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
+
+    /* --- الحاوية الرئيسية للشات في المنتصف --- */
+    .app-container {
+      width: 100%; max-width: 900px; height: 100vh; display: flex; flex-direction: column;
+      background: #161b22; border-left: 1px solid #30363d; border-right: 1px solid #30363d;
+    }
 
     /* الهيدر العلوي */
-    .chat-header { background: #161f2e; border-bottom: 1px solid #2a384e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+    .chat-header {
+      background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 25px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-logo { width: 40px; height: 40px; background: #d4af37; border-radius: 10px; display: flex; justify-content: center; align-items: center; color: #0b0f17; font-weight: 900; font-size: 1.3rem; }
-    .brand-title h3 { color: #fff; font-size: 1.1rem; }
-    .brand-title span { color: #22c55e; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-    .brand-title span::before { content: ''; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; }
+    .brand-logo { width: 38px; height: 38px; background: #d4af37; border-radius: 10px; display: flex; justify-content: center; align-items: center; color: #0d1117; font-weight: 900; font-size: 1.2rem; }
+    .brand-title h3 { color: #fff; font-size: 1.05rem; font-weight: 700; }
+    .brand-title span { color: #238636; font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .brand-title span::before { content: ''; width: 7px; height: 7px; background: #238636; border-radius: 50%; display: inline-block; }
 
-    .user-info { display: flex; align-items: center; gap: 15px; }
-    .code-badge { background: #0b0f17; border: 1px dashed #d4af37; color: #d4af37; padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; }
-    .logout-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-    .logout-btn:hover { background: #ef4444; color: #fff; }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .code-badge { background: #0d1117; border: 1px dashed #d4af37; color: #d4af37; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
+    .logout-btn { background: rgba(248, 81, 73, 0.1); border: 1px solid #f85149; color: #f85149; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; }
+    .logout-btn:hover { background: #f85149; color: #fff; }
 
-    /* منطقة الشات */
-    .chat-container { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
-    .message { display: flex; gap: 12px; max-width: 85%; }
-    .message.user { margin-left: auto; flex-direction: row-reverse; }
-    .message.ai { margin-right: auto; }
+    /* منطقة الرسائل المحاذية للمنتصف */
+    .chat-container { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 20px; }
+    .message { display: flex; gap: 14px; max-width: 90%; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.ai { align-self: flex-start; }
 
-    .avatar { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
-    .message.user .avatar { background: #3b82f6; color: #fff; }
-    .message.ai .avatar { background: #d4af37; color: #0b0f17; }
+    .avatar { width: 35px; height: 35px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; }
+    .message.user .avatar { background: #1f6feb; color: #fff; }
+    .message.ai .avatar { background: #d4af37; color: #0d1117; }
 
-    .msg-content { background: #161f2e; border: 1px solid #2a384e; padding: 14px 18px; border-radius: 14px; line-height: 1.6; font-size: 0.98rem; white-space: pre-wrap; word-break: break-word; position: relative; }
-    .message.user .msg-content { background: #1d4ed8; border-color: #2563eb; color: #fff; border-bottom-left-radius: 2px; }
+    .msg-content {
+      background: #0d1117; border: 1px solid #30363d; padding: 15px 20px;
+      border-radius: 16px; line-height: 1.7; font-size: 0.98rem; white-space: pre-wrap; word-break: break-word;
+    }
+    .message.user .msg-content { background: #1f6feb; border-color: #388bfd; color: #fff; border-bottom-left-radius: 2px; }
     .message.ai .msg-content { border-bottom-right-radius: 2px; }
 
-    /* زر تنزيل الملفات المضغوطة ZIP */
+    /* تنسيق كود Lua */
+    pre { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px; margin-top: 12px; overflow-x: auto; font-family: monospace; color: #7ee787; direction: ltr; text-align: left; }
+
+    /* زر تحميل ZIP المخصص */
     .download-zip-btn {
-      display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; background: #22c55e;
-      color: #0b0f17; font-weight: 800; border: none; padding: 10px 18px; border-radius: 8px;
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; background: #238636;
+      color: #fff; font-weight: 700; border: none; padding: 10px 18px; border-radius: 8px;
       cursor: pointer; font-size: 0.9rem; transition: 0.3s;
     }
-    .download-zip-btn:hover { background: #16a34a; color: #fff; transform: translateY(-2px); }
+    .download-zip-btn:hover { background: #2ea043; transform: translateY(-2px); }
 
-    /* كتل الأكواد */
-    pre { background: #0b0f17; border: 1px solid #2a384e; border-radius: 8px; padding: 12px; margin-top: 10px; overflow-x: auto; font-family: monospace; color: #86efac; direction: ltr; text-align: left; }
-
-    /* شريط الإدخال */
-    .input-wrapper { background: #161f2e; border-top: 1px solid #2a384e; padding: 20px 30px; }
+    /* صندوق الإدخال السفلي */
+    .input-wrapper { background: #161b22; border-top: 1px solid #30363d; padding: 20px 30px; }
     .quick-actions { display: flex; gap: 10px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; }
-    .action-chip { background: #0b0f17; border: 1px solid #2a384e; color: #cbd5e1; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .action-chip { background: #0d1117; border: 1px solid #30363d; color: #8b949e; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .action-chip:hover { border-color: #d4af37; color: #d4af37; }
 
     .chat-input-box { display: flex; gap: 12px; }
-    .chat-input-box input { flex: 1; background: #0b0f17; border: 1px solid #2a384e; border-radius: 12px; padding: 14px 20px; color: #fff; outline: none; font-size: 1rem; transition: 0.3s; }
+    .chat-input-box input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 14px 20px; color: #fff; outline: none; font-size: 1rem; transition: 0.3s; }
     .chat-input-box input:focus { border-color: #d4af37; }
-    .send-btn { background: #d4af37; border: none; border-radius: 12px; padding: 0 25px; color: #0b0f17; font-weight: 800; cursor: pointer; transition: 0.2s; }
+    .send-btn { background: #d4af37; border: none; border-radius: 12px; padding: 0 25px; color: #0d1117; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .send-btn:hover { background: #e5be40; }
 
-    #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #fff; padding: 12px 25px; border-radius: 10px; font-weight: 700; transition: 0.3s; z-index: 2000; }
+    #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #f85149; color: #fff; padding: 12px 25px; border-radius: 10px; font-weight: 700; transition: 0.3s; z-index: 2000; }
     #toast.show { bottom: 30px; }
   </style>
 </head>
 <body>
 
-  <!-- شاشة الدخول -->
+  <!-- شاشة التفعيل لدخول المستخدم -->
   <div id="authOverlay">
     <div class="auth-box">
-      <h2>Nova AI Chat</h2>
-      <p>أدخل كود الاشتراك الخاص بك للبدء</p>
+      <h2>Nova AI</h2>
+      <p>أدخل كود الاشتراك للبدء في كتابة سكريبتات Lua</p>
       <input type="text" id="accessCodeInput" placeholder="NOVA-XXXXX" autocomplete="off">
       <button onclick="loginWithCode()">دخول إلى الشات 🚀</button>
     </div>
   </div>
 
-  <!-- الهيدر -->
-  <div class="chat-header">
-    <div class="brand">
-      <div class="brand-logo">N</div>
-      <div class="brand-title">
-        <h3>مساعد Nova الذكي (Zip Exporter)</h3>
-        <span>جاهز لتطوير وتصدير الأكواد</span>
+  <!-- التطبيق متموقع في منتصف الشاشة -->
+  <div class="app-container">
+    <div class="chat-header">
+      <div class="brand">
+        <div class="brand-logo">N</div>
+        <div class="brand-title">
+          <h3>مساعد سكريبتات Lua الذكي</h3>
+          <span>توليد وتصدير ملفات ZIP جاهزة</span>
+        </div>
+      </div>
+      <div class="user-info">
+        <span class="code-badge" id="activeCodeBadge">NOVA-XXXXX</span>
+        <button class="logout-btn" onclick="logout()">خروج</button>
       </div>
     </div>
-    <div class="user-info">
-      <span class="code-badge" id="activeCodeBadge">NOVA-XXXXX</span>
-      <button class="logout-btn" onclick="logout()">خروج</button>
-    </div>
-  </div>
 
-  <!-- محادثة الشات -->
-  <div class="chat-container" id="chatContainer">
-    <div class="message ai">
-      <div class="avatar">AI</div>
-      <div class="msg-content">أهلاً بك! 👋 أنا مساعدك الذكي لتطوير الأكواد.
-اطرح علي أي تعديل أو اطلب إنشاء سكريبت كامل، وعندما ننتهي، اضغط على زر "تنزيل كـ ZIP 📦" الذي يظهر تحت الإجابة لتحميل جميع الملفات مضغوطة فوراً!</div>
+    <!-- محادثة الشات -->
+    <div class="chat-container" id="chatContainer">
+      <div class="message ai">
+        <div class="avatar">AI</div>
+        <div class="msg-content">أهلاً بك! 👋 أنا جاهز لتطوير سكريبتات Lua وتوليد ملفات جاهزة للتنزيل المباشر بصيغة ZIP 📦. 
+أخبرني بما تريد القيام به اليوم!</div>
+      </div>
     </div>
-  </div>
 
-  <!-- شريط الإدخال -->
-  <div class="input-wrapper">
-    <div class="quick-actions">
-      <div class="action-chip" onclick="quickPrompt('برمج لي موقع إخباري بسيط بملفات HTML, CSS, JS')">🌐 موقع كامل ZIP</div>
-      <div class="action-chip" onclick="quickPrompt('اكتب لي سكريبت Python لمعالجة الصور وسكريبت JS للموقع')">💻 سكريبتات متعدده</div>
-      <div class="action-chip" onclick="quickPrompt('صمم لي تطبيق حاسبة متكامل بملفات منفصلة')">🧮 تطبيق حاسبة</div>
-    </div>
-    <div class="chat-input-box">
-      <input type="text" id="userInput" placeholder="طلبك أو التعديل المطلوب..." onkeypress="handleKeyPress(event)">
-      <button class="send-btn" onclick="sendMessage()">إرسال 🚀</button>
+    <!-- منطقة الإدخال -->
+    <div class="input-wrapper">
+      <div class="quick-actions">
+        <div class="action-chip" onclick="quickPrompt('اكتب لي سكريبت Lua ونظام تخزين بيانات بسيط')">📜 سكريبت Lua كامل</div>
+        <div class="action-chip" onclick="quickPrompt('صمم لي نظام Admin Commands بـ Lua')">⚡ نظام أدوية/أوامر Lua</div>
+        <div class="action-chip" onclick="quickPrompt('برمج سكريبت حماية ومراقبة لاعبين بـ Lua')">🛡️ سكريبت حماية Lua</div>
+      </div>
+      <div class="chat-input-box">
+        <input type="text" id="userInput" placeholder="اكتب السكريبت المطلوب أو التعديل هنا..." onkeypress="handleKeyPress(event)">
+        <button class="send-btn" onclick="sendMessage()">إرسال 🚀</button>
+      </div>
     </div>
   </div>
 
@@ -162,11 +176,11 @@
 
     const GROQ_API_KEY = "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";
 
-    // توجيه الذكاء الاصطناعي لتسمية أنواع الأكواد والملفات
+    // توجيه الذكاء الاصطناعي لكتابة سكريبتات Lua بالأساس
     let conversationHistory = [
       { 
         role: "system", 
-        content: "أنت مهندس برمجيات محترف. عندما تطلب منك الأكواد أو التعديلات، اكتب كل كود داخل كتلته المخصصة واذكر اسم الملف المباشر فوق الكود إن أمكن (مثل: index.html, script.js, style.css, main.py). قدم أكواد كاملة وقابلة للتنفيذ مباشرة."
+        content: "أنت خبير برمجة متخصص في سكريبتات Lua ولغات البرمجة الأخرى. عند إعطاء أكواد للمستخدم، اكتب دائماً كود نظيف داخل كتل الملاحظات وتأكد من كتابة اسم لغة البرمجة (مثل lua) فوق الكود، ليتمكن النظام من ضغطها في ملف ZIP بامتداء .lua مجاناً."
       }
     ];
 
@@ -219,7 +233,7 @@
       input.value = '';
 
       conversationHistory.push({ role: "user", content: text });
-      const typingId = addMessage('جاري كتابة الأكواد وتجهيز النتيجة...', 'ai');
+      const typingId = addMessage('جاري برمجة سكريبت Lua وتجهيزه...', 'ai');
 
       try {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -243,11 +257,11 @@
           conversationHistory.push({ role: "assistant", content: aiReply });
           addMessage(aiReply, 'ai');
         } else {
-          addMessage('حدث خطأ أثناء معالجة الطلب من قبل الذكاء الاصطناعي.', 'ai');
+          addMessage('حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.', 'ai');
         }
       } catch (error) {
         removeMessage(typingId);
-        addMessage('تعذر الاتصال بـ API: ' + error.message, 'ai');
+        addMessage('خطأ في الشبكة: ' + error.message, 'ai');
       }
     };
 
@@ -278,12 +292,12 @@
 
       container.appendChild(msgDiv);
 
-      // إذا كانت الرسالة تحوي أكواد برمجية ومن الذكاء الاصطناعي، أضف زر التحميل مضغوطاً ZIP
+      // إنشاء زر تحميل الـ ZIP إذا وجد كود برمي داخل الرد
       if (sender === 'ai' && text.includes('```')) {
         const contentDiv = document.getElementById(`content-${msgId}`);
         const zipBtn = document.createElement('button');
         zipBtn.className = 'download-zip-btn';
-        zipBtn.innerHTML = '📦 تحميل الأكواد المكتوبة في ملف (ZIP)';
+        zipBtn.innerHTML = '📦 تحميل ملفات Lua مضغوطة (ZIP)';
         zipBtn.onclick = () => downloadCodeAsZip(text);
         contentDiv.appendChild(zipBtn);
       }
@@ -297,7 +311,7 @@
       if (el) el.remove();
     }
 
-    // دالة استخراج الأكواد وضغطها في ملف ZIP
+    // استخراج أجزاء الكود وضغطها في ملف Lua بصيغة ZIP
     window.downloadCodeAsZip = function(rawText) {
       const zip = new JSZip();
       const codeBlockRegex = /```(?:(\w+)\n)?([\s\S]*?)```/g;
@@ -305,32 +319,26 @@
       let fileIndex = 1;
 
       while ((match = codeBlockRegex.exec(rawText)) !== null) {
-        let lang = match[1] || 'txt';
+        let lang = (match[1] || 'lua').toLowerCase();
         let codeContent = match[2].trim();
 
-        // تحديد اسم امتداد الملف تلقائياً بناءً على لغة الكود
-        let ext = 'txt';
+        let ext = 'lua';
         if (lang === 'html') ext = 'html';
         else if (lang === 'css') ext = 'css';
         else if (lang === 'javascript' || lang === 'js') ext = 'js';
         else if (lang === 'python' || lang === 'py') ext = 'py';
-        else if (lang === 'json') ext = 'json';
+        else if (lang === 'lua') ext = 'lua';
 
-        let filename = `file_${fileIndex}.${ext}`;
-
-        // إذا كانت html اجعل اسم الملف index.html تلقائياً
-        if (ext === 'html' && fileIndex === 1) filename = 'index.html';
-        if (ext === 'css' && fileIndex === 2) filename = 'style.css';
-        if (ext === 'js' && fileIndex === 3) filename = 'script.js';
+        let filename = `script_${fileIndex}.${ext}`;
+        if (ext === 'lua' && fileIndex === 1) filename = 'main.lua';
 
         zip.file(filename, codeContent);
         fileIndex++;
       }
 
-      // ضغط الملفات وتحميلها
       zip.generateAsync({ type: "blob" }).then(function(content) {
-        saveAs(content, "project_codes.zip");
-        showToast('تم تحميل ملف الـ ZIP بنجاح! 📦');
+        saveAs(content, "lua_scripts.zip");
+        showToast('تم تحميل السكريبت في ملف ZIP بنجاح! 📦');
       });
     };
   </script>
