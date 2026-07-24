@@ -222,7 +222,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB165FX1UTITowtK-il9rzIL_LwzfQwkpI",
@@ -255,6 +255,49 @@
       renderChatsSidebar();
       loadActiveChatMessages();
     };
+
+    let activeKeyListener = null; // دالة إلغاء الاشتراك في المراقبة اللحظية للكود الحالي
+
+    window.logout = function() {
+      if (activeKeyListener) { activeKeyListener(); activeKeyListener = null; }
+      localStorage.removeItem('nova_user_code');
+      document.getElementById('authOverlay').style.display = 'flex';
+    }
+
+    // مراقبة الكود لحظياً بعد الدخول: لو اتحذف، انتهت صلاحيته، أو الإدارة فكت ربطه، أو استخدمه جهاز آخر -> يتم طرد المستخدم فوراً بدون أي حاجة لعمل ريفريش
+    function startKeyMonitor(code, myIP) {
+      if (activeKeyListener) { activeKeyListener(); activeKeyListener = null; }
+      const keyRef = ref(db, 'keys/' + code);
+      activeKeyListener = onValue(keyRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          showToast('تم حذف هذا الكود، تم تسجيل خروجك تلقائياً!');
+          logout();
+          return;
+        }
+        const data = snapshot.val();
+        const now = Date.now();
+        if (data.expireAt && now > data.expireAt) {
+          showToast('عفواً، انتهت صلاحية هذا الكود!');
+          logout();
+          return;
+        }
+        if (!data.boundIP) {
+          showToast('لقد تم فك ربط حسابك من قبل الإدارة!');
+          logout();
+          return;
+        }
+        if (data.boundIP !== myIP) {
+          showToast('تم استخدام هذا الكود من جهاز آخر، تم إلغاء دخولك!');
+          logout();
+          return;
+        }
+        const diffMs = data.expireAt ? (data.expireAt - now) : (30 * 24 * 60 * 60 * 1000);
+        const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+        const daysLeft = Math.floor(hoursLeft / 24);
+        const timeBadge = document.getElementById('timeRemainingBadge');
+        if (timeBadge) timeBadge.innerText = `متبقي: ${daysLeft > 0 ? daysLeft + ' يوم' : hoursLeft + ' ساعة'}`;
+      });
+    }
 
     window.validateAndLogin = async function() {
       const inputCode = document.getElementById('accessCodeInput').value.trim().toUpperCase();
@@ -316,15 +359,12 @@
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('activeCodeBadge').innerText = code;
         document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
+
+        if (currentIP) startKeyMonitor(code, currentIP);
       } catch (err) {
         console.error(err);
         showToast('خطأ في الاتصال بقاعدة البيانات.');
       }
-    }
-
-    window.logout = function() {
-      localStorage.removeItem('nova_user_code');
-      document.getElementById('authOverlay').style.display = 'flex';
     }
 
     window.showToast = function(msg) {
