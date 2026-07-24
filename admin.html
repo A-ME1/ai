@@ -76,6 +76,26 @@
     .permission-checkboxes { display: flex; flex-direction: column; gap: 10px; background: #12161f; padding: 15px; border-radius: 8px; border: 1px solid #2a3447; margin: 15px 0; text-align: right; }
     .permission-checkboxes label { color: #e2e8f0; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
     .permission-checkboxes input { width: 18px; height: 18px; accent-color: #d4af37; cursor: pointer; }
+
+    /* تنبيهات داخلية في الموقع بديل عن alert المتصفح */
+    #siteToast {
+      position: fixed;
+      bottom: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      transition: all 0.4s ease;
+      z-index: 9999;
+      text-align: center;
+      min-width: 280px;
+    }
+    #siteToast.show { bottom: 30px; }
+    #siteToast.success { background: #16a34a; border: 1px solid #22c55e; }
+    #siteToast.error { background: #dc2626; border: 1px solid #ef4444; }
   </style>
 </head>
 <body>
@@ -87,6 +107,7 @@
       <button class="btn-action" onclick="showView('keysView')">🔑 إدارة الأكواد</button>
       <button class="btn-action" onclick="showView('requestsView')">🔔 الطلبات</button>
       <button class="btn-action" onclick="showView('manageUsersView')">👥 المستخدمين</button>
+      <button class="btn-action" style="border-color:#ef4444; color:#ef4444;" onclick="showView('banView')">🚫 باند</button>
       <button class="btn-action btn-logout" onclick="logout()">خروج</button>
     </div>
   </div>
@@ -137,6 +158,21 @@
       <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center;">المسؤولين والأعضاء</h2>
       <div class="list-container" id="usersList"></div>
     </div>
+
+    <!-- واجهة حظر الأجهزة عبر الـ IP -->
+    <div class="card-box view-container" id="banView">
+      <h2 style="color: #ef4444; margin-bottom: 20px; text-align: center;">🚫 حظر جهاز</h2>
+      <div class="input-group">
+        <label>أدخل عنوان الـ IP الخاص بالجهاز المراد حظره:</label>
+        <input type="text" id="banIpInput" placeholder="مثال: 41.32.100.55">
+      </div>
+      <button class="btn" style="background:#ef4444; color:#fff;" id="banIpBtn">🚫 حظر هذا الجهاز</button>
+
+      <h3 style="color: #38bdf8; font-size: 1rem; margin: 20px 0 10px; text-align: right;">الأجهزة المحظورة حالياً</h3>
+      <div class="list-container" id="bannedList">
+        <p style="text-align:center; color:#94a3b8;">لا يوجد أجهزة محظورة حالياً.</p>
+      </div>
+    </div>
   </div>
 
   <div id="editPermissionsModal" class="modal">
@@ -154,6 +190,20 @@
       </div>
     </div>
   </div>
+
+  <!-- مودال تأكيد داخلي بديل عن confirm() المتصفح -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <h3>تأكيد الإجراء</h3>
+      <p id="confirmMessage" style="text-align:center; color:#cbd5e1; margin-bottom:15px;"></p>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" style="background:#22c55e; color:#fff; margin-top:0;" onclick="resolveConfirm(true)">نعم ✓</button>
+        <button class="btn" style="background:#ef4444; color:#fff; margin-top:0;" onclick="resolveConfirm(false)">إلغاء ✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="siteToast"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -173,6 +223,27 @@
     const db = getDatabase(app);
     let currentEditingUserKey = null;
 
+    // تنبيهات داخل الموقع بديل عن alert() المتصفح
+    window.showToast = function(msg, isSuccess = false) {
+      const toast = document.getElementById('siteToast');
+      toast.innerText = msg;
+      toast.className = 'show ' + (isSuccess ? 'success' : 'error');
+      setTimeout(() => { toast.className = ''; }, 3500);
+    };
+
+    // تأكيد داخل الموقع بديل عن confirm() المتصفح
+    let pendingConfirmAction = null;
+    window.showConfirm = function(message, onConfirm) {
+      document.getElementById('confirmMessage').innerText = message;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal').style.display = 'flex';
+    };
+    window.resolveConfirm = function(result) {
+      document.getElementById('confirmModal').style.display = 'none';
+      if (result && pendingConfirmAction) pendingConfirmAction();
+      pendingConfirmAction = null;
+    };
+
     window.showView = function(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
       document.getElementById(viewId).classList.add('active');
@@ -183,8 +254,8 @@
     };
 
     window.logout = function() {
-      alert("تم تسجيل الخروج بنجاح.");
-      window.location.reload();
+      showToast("تم تسجيل الخروج بنجاح.", true);
+      setTimeout(() => window.location.reload(), 1000);
     };
 
     // دالة لتوليد الكود بالصيغة NOVA-XXXXX
@@ -210,10 +281,10 @@
           durationDays: durationDays,
           expireAt: expireAt
         });
-        alert(`تم توليد الكود بنجاح وإنشاؤه في قاعدة البيانات!\n\nالكود: ${newCode}\nالمدة: ${durationDays} يوم`);
+        showToast(`تم توليد الكود بنجاح: ${newCode} (المدة: ${durationDays} يوم)`, true);
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ أثناء حفظ الكود.");
+        showToast("حدث خطأ أثناء حفظ الكود.");
       }
     });
 
@@ -222,7 +293,7 @@
       const textContent = document.getElementById("newKeyInput").value;
       const durationDays = parseInt(document.getElementById("manualDurationDays").value) || 30;
       
-      if (!textContent.trim()) return alert("يرجى كتابة أو لصق الأكواد في الصندوق!");
+      if (!textContent.trim()) return showToast("يرجى كتابة أو لصق الأكواد في الصندوق!");
 
       const lines = textContent.split(/\r?\n/);
       let addedCount = 0;
@@ -242,9 +313,9 @@
           }
         }
         document.getElementById("newKeyInput").value = "";
-        alert(`تم إضافة ${addedCount} كود بنجاح لمدة ${durationDays} يوم!`);
+        showToast(`تم إضافة ${addedCount} كود بنجاح لمدة ${durationDays} يوم!`, true);
       } catch (err) {
-        alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+        showToast("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
       }
     });
 
@@ -277,16 +348,18 @@
       }
     });
 
-    window.deleteKey = async (key) => {
-      if (confirm(`هل أنت متأكد من حذف الكود: ${key}؟`)) {
+    window.deleteKey = (key) => {
+      showConfirm(`هل أنت متأكد من حذف الكود: ${key}؟`, async () => {
         await remove(ref(db, 'keys/' + key));
-      }
+        showToast('تم حذف الكود بنجاح.', true);
+      });
     };
 
-    window.unbindKey = async (key) => {
-      if (confirm(`هل تريد فك ربط الكود "${key}" من جهازه الحالي؟ سيتمكن أي جهاز من استخدامه أول مرة بعد ذلك.`)) {
+    window.unbindKey = (key) => {
+      showConfirm(`هل تريد فك ربط الكود "${key}" من جهازه الحالي؟ سيتمكن أي جهاز من استخدامه أول مرة بعد ذلك.`, async () => {
         await update(ref(db, 'keys/' + key), { boundIP: null });
-      }
+        showToast('تم فك ربط الكود بنجاح.', true);
+      });
     };
 
     onValue(ref(db, 'requests'), (snapshot) => {
@@ -318,11 +391,14 @@
     window.acceptRequest = async (reqId, username) => {
       await set(ref(db, 'users/' + reqId), { username, role: 'member', joinedAt: Date.now() });
       await remove(ref(db, 'requests/' + reqId));
-      alert(`تم قبول المستخدم ${username} بنجاح.`);
+      showToast(`تم قبول المستخدم ${username} بنجاح.`, true);
     };
 
-    window.deleteRequest = async (reqId) => {
-      if (confirm("هل أنت متأكد من الرفض؟")) await remove(ref(db, 'requests/' + reqId));
+    window.deleteRequest = (reqId) => {
+      showConfirm("هل أنت متأكد من الرفض؟", async () => {
+        await remove(ref(db, 'requests/' + reqId));
+        showToast('تم رفض الطلب.', true);
+      });
     };
 
     onValue(ref(db, 'users'), (snapshot) => {
@@ -369,11 +445,62 @@
       };
       await update(ref(db, `users/${currentEditingUserKey}/permissions`), newPerms);
       closeModal('editPermissionsModal');
-      alert("تم الحفظ بنجاح!");
+      showToast("تم الحفظ بنجاح!", true);
     };
 
-    window.deleteUser = async (userKey) => {
-      if (confirm("هل أنت متأكد من الحذف؟")) await remove(ref(db, 'users/' + userKey));
+    window.deleteUser = (userKey) => {
+      showConfirm("هل أنت متأكد من الحذف؟", async () => {
+        await remove(ref(db, 'users/' + userKey));
+        showToast('تم حذف المستخدم.', true);
+      });
+    };
+
+    // ===== حظر الأجهزة عبر عنوان الـ IP =====
+    function ipToKey(ip) { return ip.trim().replace(/\./g, '_'); }
+
+    document.getElementById("banIpBtn").addEventListener("click", async () => {
+      const ip = document.getElementById("banIpInput").value.trim();
+      if (!ip) return showToast("يرجى إدخال عنوان الـ IP أولاً!");
+
+      const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (!ipPattern.test(ip)) return showToast("صيغة الـ IP غير صحيحة! مثال صحيح: 41.32.100.55");
+
+      try {
+        await set(ref(db, 'bannedIPs/' + ipToKey(ip)), { ip, bannedAt: Date.now() });
+        document.getElementById("banIpInput").value = "";
+        showToast(`تم حظر الجهاز صاحب الـ IP: ${ip} بنجاح 🚫`, true);
+      } catch (err) {
+        showToast("حدث خطأ أثناء الحظر.");
+      }
+    });
+
+    onValue(ref(db, 'bannedIPs'), (snapshot) => {
+      const bannedList = document.getElementById("bannedList");
+      bannedList.innerHTML = "";
+      const data = snapshot.val();
+      if (data) {
+        Object.keys(data).forEach(key => {
+          const entry = data[key];
+          const item = document.createElement("div");
+          item.className = "item-card";
+          item.innerHTML = `
+            <div><strong>🚫 ${entry.ip}</strong></div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="unbanIp('${key}', '${entry.ip}')">إلغاء الحظر</button>
+            </div>
+          `;
+          bannedList.appendChild(item);
+        });
+      } else {
+        bannedList.innerHTML = `<p style="text-align:center; color:#94a3b8;">لا يوجد أجهزة محظورة حالياً.</p>`;
+      }
+    });
+
+    window.unbanIp = (key, ip) => {
+      showConfirm(`هل تريد إلغاء حظر الجهاز صاحب الـ IP: ${ip}؟`, async () => {
+        await remove(ref(db, 'bannedIPs/' + key));
+        showToast('تم إلغاء الحظر بنجاح.', true);
+      });
     };
 
 document.addEventListener('contextmenu', event => event.preventDefault());
