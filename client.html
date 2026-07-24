@@ -153,8 +153,24 @@
 
   <div id="toast"></div>
 
-  <script>
-    // تجميع الـ API Key لتجنب حظر GitHub
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB165FX1UTITowtK-il9rzIL_LwzfQwkpI",
+      authDomain: "nova-state.firebaseapp.com",
+      databaseURL: "https://nova-state-default-rtdb.firebaseio.com",
+      projectId: "nova-state",
+      storageBucket: "nova-state.firebasestorage.app",
+      messagingSenderId: "478766533943",
+      appId: "1:478766533943:web:6ce4d7cd0b1a58d72c1eb2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ربط مفتاح API الخاص بـ Groq بأمان
     const k1 = "gsk_ZdkWYQEtGqeJJDrtrrgq";
     const k2 = "WGdyb3FY3patS54YhxytqNnHu65sGCCV";
     const GROQ_API_KEY = k1 + k2;
@@ -170,56 +186,64 @@
       }
     };
 
-    function validateAndLogin() {
+    window.validateAndLogin = async function() {
       const inputCode = document.getElementById('accessCodeInput').value.trim().toUpperCase();
       if (!inputCode) return showToast('يرجى إدخال الكود أولاً!');
-      checkCodeStatus(inputCode, false);
+      await checkCodeStatus(inputCode, false);
     }
 
-    function checkCodeStatus(code, isAutoLogin) {
-      const allCodes = JSON.parse(localStorage.getItem('nova_access_codes') || '[]');
-      const foundData = allCodes.find(c => c.code === code);
+    async function checkCodeStatus(code, isAutoLogin) {
+      try {
+        const keyRef = ref(db, 'keys/' + code);
+        const snapshot = await get(keyRef);
 
-      if (!foundData) {
-        showToast('الكود المدخل غير صحيح!');
-        if (isAutoLogin) logout();
-        return;
+        if (!snapshot.exists()) {
+          showToast('الكود المدخل غير صحيح أو غير مسجل!');
+          if (isAutoLogin) logout();
+          return;
+        }
+
+        const foundData = snapshot.val();
+        const now = Date.now();
+
+        if (foundData.expireAt && now > foundData.expireAt) {
+          showToast('عفواً، لقد انتهت صلاحية هذا الكود!');
+          if (isAutoLogin) logout();
+          return;
+        }
+
+        // حساب المدة المتبقية بناءً على قاعدة البيانات
+        const diffMs = foundData.expireAt ? (foundData.expireAt - now) : (30 * 24 * 60 * 60 * 1000);
+        const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+        const daysLeft = Math.floor(hoursLeft / 24);
+
+        let timeLeftStr = daysLeft > 0 ? `${daysLeft} يوم` : `${hoursLeft} ساعة`;
+
+        localStorage.setItem('nova_user_code', code);
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('activeCodeBadge').innerText = code;
+        document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
+        document.getElementById('welcomeMsg').innerText = `أهلاً بك 👋 اشتراكك مفعل وساري المفعول لمدة (${timeLeftStr}) قادمة. كيف أستطيع مساعدتك اليوم؟`;
+
+      } catch (err) {
+        console.error(err);
+        showToast('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
       }
-
-      const now = Date.now();
-      if (now > foundData.expireAt) {
-        showToast('عفواً، لقد انتهت صلاحية هذا الكود!');
-        if (isAutoLogin) logout();
-        return;
-      }
-
-      // حساب المدة المتبقية
-      const diffMs = foundData.expireAt - now;
-      const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
-      const daysLeft = Math.floor(hoursLeft / 24);
-
-      let timeLeftStr = daysLeft > 0 ? `${daysLeft} يوم` : `${hoursLeft} ساعة`;
-
-      localStorage.setItem('nova_user_code', code);
-      document.getElementById('authOverlay').style.display = 'none';
-      document.getElementById('activeCodeBadge').innerText = code;
-      document.getElementById('timeRemainingBadge').innerText = `متبقي: ${timeLeftStr}`;
-      document.getElementById('welcomeMsg').innerText = `أهلاً بك 👋 اشتراكك مفعل وساري المفعول لمدة (${timeLeftStr}) قادمة. كيف أستطيع مساعدتك اليوم؟`;
     }
 
-    function logout() {
+    window.logout = function() {
       localStorage.removeItem('nova_user_code');
       document.getElementById('authOverlay').style.display = 'flex';
     }
 
-    function showToast(msg) {
+    window.showToast = function(msg) {
       const t = document.getElementById('toast');
       t.innerText = msg;
       t.className = 'show';
       setTimeout(() => t.className = '', 3000);
     }
 
-    async function sendMessage() {
+    window.sendMessage = async function() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
       if (!text) return;
@@ -264,7 +288,7 @@
       }
     }
 
-    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    window.handleKeyPress = function(e) { if (e.key === 'Enter') sendMessage(); }
 
     function addMessage(text, sender) {
       const container = document.getElementById('chatContainer');
